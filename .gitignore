@@ -7,6 +7,9 @@ app/build/
 local.properties
 *.iml
 
+# Claude Code
+.claude/
+
 # IDE
 .idea/
 *.iws
