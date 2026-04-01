@@ -1,0 +1,17 @@
+# Built artifacts
+/build/
+app/build/
+.gradle/
+
+# Local config
+local.properties
+*.iml
+
+# IDE
+.idea/
+*.iws
+*.ipr
+
+# OS
+.DS_Store
+Thumbs.db
