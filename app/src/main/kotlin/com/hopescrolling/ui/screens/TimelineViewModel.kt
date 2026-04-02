@@ -1,8 +1,9 @@
 package com.hopescrolling.ui.screens
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.hopescrolling.data.article.ArticleRepository
 import com.hopescrolling.data.rss.Article
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -15,13 +16,12 @@ data class TimelineUiState(
 
 class TimelineViewModel(
     private val repository: ArticleRepository,
-    private val scope: CoroutineScope,
-) {
+) : ViewModel() {
     private val _uiState = MutableStateFlow(TimelineUiState())
     val uiState: StateFlow<TimelineUiState> = _uiState
 
     init {
-        scope.launch {
+        viewModelScope.launch {
             runCatching { repository.getArticles() }
                 .onSuccess { articles ->
                     _uiState.value = TimelineUiState(articles = articles, isLoading = false)

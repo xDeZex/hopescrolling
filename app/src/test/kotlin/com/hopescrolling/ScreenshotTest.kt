@@ -12,9 +12,13 @@ import com.hopescrolling.data.rss.Article
 import com.hopescrolling.ui.screens.TimelineViewModel
 import com.hopescrolling.util.FakeArticleRepository
 import com.hopescrolling.util.FakeFeedSourceRepository
-import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Rule
 import org.junit.Test
@@ -45,7 +49,11 @@ class ScreenshotTest {
     @get:Rule
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
-    private fun viewModelScope() = TestScope(UnconfinedTestDispatcher())
+    @Before
+    fun setUp() = Dispatchers.setMain(UnconfinedTestDispatcher())
+
+    @After
+    fun tearDown() = Dispatchers.resetMain()
 
     private fun saveScreenshot(name: String) {
         composeTestRule.waitForIdle()
@@ -68,7 +76,7 @@ class ScreenshotTest {
             Article(title = "Kotlin 2.2 Brings Improved Type Inference", link = "https://a.com/2", description = "The latest Kotlin release ships smarter type inference and faster incremental compilation.", pubDate = "Mon, 31 Mar 2026 14:30:00 GMT", feedSourceId = "kotlin"),
             Article(title = "Jetpack Compose Stability Update", link = "https://a.com/3", description = null, pubDate = "Sun, 30 Mar 2026 08:00:00 GMT", feedSourceId = "android"),
         )
-        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles), viewModelScope())
+        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles))
         composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
         saveScreenshot("timeline_screen")
         assertTrue(File(screenshotsDir, "timeline_screen.png").exists())
@@ -76,7 +84,7 @@ class ScreenshotTest {
 
     @Test
     fun screenshot_feedManagerScreen_empty() {
-        val viewModel = FeedManagerViewModel(FakeFeedSourceRepository(), viewModelScope())
+        val viewModel = FeedManagerViewModel(FakeFeedSourceRepository())
         composeTestRule.setContent { FeedManagerScreen(viewModel = viewModel) }
         saveScreenshot("feed_manager_empty")
         assertTrue(File(screenshotsDir, "feed_manager_empty.png").exists())
@@ -89,7 +97,7 @@ class ScreenshotTest {
             FeedSource(id = "1", name = "Tech Blog", url = "https://tech.example.com/feed"),
             FeedSource(id = "2", name = "News Feed", url = "https://news.example.com/feed"),
         )
-        val viewModel = FeedManagerViewModel(repo, viewModelScope())
+        val viewModel = FeedManagerViewModel(repo)
         composeTestRule.setContent { FeedManagerScreen(viewModel = viewModel) }
         saveScreenshot("feed_manager_with_feeds")
         assertTrue(File(screenshotsDir, "feed_manager_with_feeds.png").exists())

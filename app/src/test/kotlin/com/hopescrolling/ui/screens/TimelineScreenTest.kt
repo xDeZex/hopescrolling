@@ -6,10 +6,13 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import com.hopescrolling.data.rss.Article
 import com.hopescrolling.util.FakeArticleRepository
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
+import org.junit.After
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -22,13 +25,18 @@ class TimelineScreenTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private fun viewModelScope(): CoroutineScope = TestScope(UnconfinedTestDispatcher())
+    @Before
+    fun setUp() = Dispatchers.setMain(UnconfinedTestDispatcher())
+
+    @After
+    fun tearDown() = Dispatchers.resetMain()
 
     @Test
     fun timelineScreen_showsLoadingIndicatorWhileLoading() {
         val dispatcher = StandardTestDispatcher()
+        Dispatchers.setMain(dispatcher)
         val repo = FakeArticleRepository()
-        val viewModel = TimelineViewModel(repo, TestScope(dispatcher))
+        val viewModel = TimelineViewModel(repo)
         composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithTag("timeline_loading").assertIsDisplayed()
@@ -40,7 +48,7 @@ class TimelineScreenTest {
             Article(title = "First Post", link = "https://a.com/1", description = null, pubDate = null, feedSourceId = "f1"),
             Article(title = "Second Post", link = "https://a.com/2", description = null, pubDate = null, feedSourceId = "f1"),
         )
-        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles), viewModelScope())
+        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles))
         composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithText("First Post").assertIsDisplayed()
@@ -52,7 +60,7 @@ class TimelineScreenTest {
         val articles = listOf(
             Article(title = "Post With Desc", link = "https://a.com/1", description = "A summary of the post", pubDate = null, feedSourceId = "f1"),
         )
-        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles), viewModelScope())
+        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles))
         composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithText("A summary of the post").assertIsDisplayed()
@@ -61,7 +69,7 @@ class TimelineScreenTest {
     @Test
     fun timelineScreen_showsErrorMessage() {
         val repo = FakeArticleRepository(error = RuntimeException("could not load"))
-        val viewModel = TimelineViewModel(repo, viewModelScope())
+        val viewModel = TimelineViewModel(repo)
         composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithTag("timeline_error").assertIsDisplayed()
@@ -70,7 +78,7 @@ class TimelineScreenTest {
 
     @Test
     fun timelineScreen_showsEmptyStateWhenNoArticles() {
-        val viewModel = TimelineViewModel(FakeArticleRepository(articles = emptyList()), viewModelScope())
+        val viewModel = TimelineViewModel(FakeArticleRepository(articles = emptyList()))
         composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithTag("timeline_empty").assertIsDisplayed()
