@@ -6,7 +6,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Never `git push` unless explicitly told to.
 
-Each PR must have exactly one commit. All fixes and follow-ups go into the same commit via `git commit --amend`, not as new commits.
+Each PR must have exactly one commit. All fixes and follow-ups go into the same commit via `git commit --amend`, not as new commits. If the branch contains multiple unrelated commits, first fetch and check whether any earlier PRs have already merged into `main` (`git fetch origin && git log origin/main..HEAD`) — the branch may look clean once main is up to date. Only if genuinely unrelated commits remain should you create a separate PR for each by cherry-picking onto a fresh branch from `main`.
+
+When asked to "automerge": fetch origin, check `git log origin/main..HEAD` and open PRs (`gh pr list`) to understand the current state, then create a PR for the latest commit and enable automerge (`gh pr merge --auto --rebase`).
+
+After every commit, launch a subagent to review it (`git show HEAD`) and report findings before proceeding.
 
 ## Commands
 
