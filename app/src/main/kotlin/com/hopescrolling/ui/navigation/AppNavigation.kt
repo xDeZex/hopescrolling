@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -69,12 +70,10 @@ fun AppNavigation() {
         NavHost(
             navController = navController,
             startDestination = ROUTE_TIMELINE,
+            modifier = Modifier.padding(padding),
         ) {
             composable(ROUTE_TIMELINE) { TimelineScreen() }
             composable(ROUTE_FEED_MANAGER) { FeedManagerScreen(feedManagerViewModel) }
         }
-        // suppress unused padding warning — padding will be used once screens have content
-        @Suppress("UNUSED_EXPRESSION")
-        padding
     }
 }
