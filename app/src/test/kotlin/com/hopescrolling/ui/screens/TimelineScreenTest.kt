@@ -1,7 +1,9 @@
 package com.hopescrolling.ui.screens
 
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import com.hopescrolling.data.rss.Article
@@ -82,5 +84,18 @@ class TimelineScreenTest {
         composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithTag("timeline_empty").assertIsDisplayed()
+    }
+
+    @Test
+    fun timelineScreen_articleWithNoDescriptionDoesNotShowDescriptionText() {
+        val descriptionText = "A summary that should not appear"
+        val articles = listOf(
+            Article(title = "No Desc Post", link = "https://a.com/1", description = null, pubDate = null, feedSourceId = "f1"),
+        )
+        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles))
+        composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
+
+        composeTestRule.onNodeWithText("No Desc Post").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText(descriptionText).assertCountEquals(0)
     }
 }
