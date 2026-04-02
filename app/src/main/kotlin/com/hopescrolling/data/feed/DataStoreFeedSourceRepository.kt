@@ -47,4 +47,11 @@ class DataStoreFeedSourceRepository(
             prefs.remove(urlKey(id))
         }
     }
+
+    override suspend fun update(source: FeedSource) {
+        dataStore.edit { prefs ->
+            prefs[nameKey(source.id)] = source.name
+            prefs[urlKey(source.id)] = source.url
+        }
+    }
 }

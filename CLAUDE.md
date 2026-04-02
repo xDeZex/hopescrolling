@@ -2,6 +2,12 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## General rules
+
+Never `git push` unless explicitly told to.
+
+Each PR must have exactly one commit. All fixes and follow-ups go into the same commit via `git commit --amend`, not as new commits.
+
 ## Commands
 
 `gradlew` is patched to fall back to Android Studio's JDK when `JAVA_HOME` is not set — no `JAVA_HOME` export needed locally. `org.gradle.java.home` is intentionally absent from `gradle.properties` so CI can use its own JDK.
