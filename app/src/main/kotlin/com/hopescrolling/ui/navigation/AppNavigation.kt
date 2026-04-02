@@ -20,11 +20,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.hopescrolling.data.article.DefaultArticleRepository
+import com.hopescrolling.data.article.httpRssFeedFetcher
 import com.hopescrolling.data.feed.DataStoreFeedSourceRepository
 import com.hopescrolling.data.feed.feedSourceDataStore
 import com.hopescrolling.ui.screens.FeedManagerScreen
 import com.hopescrolling.ui.screens.FeedManagerViewModel
 import com.hopescrolling.ui.screens.TimelineScreen
+import com.hopescrolling.ui.screens.TimelineViewModel
 
 private const val ROUTE_TIMELINE = "timeline"
 private const val ROUTE_FEED_MANAGER = "feed_manager"
@@ -34,8 +37,11 @@ private const val ROUTE_FEED_MANAGER = "feed_manager"
 fun AppNavigation() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val repository = remember { DataStoreFeedSourceRepository(context.feedSourceDataStore) }
-    val feedManagerViewModel = remember { FeedManagerViewModel(repository, scope) }
+    val feedSourceRepository = remember { DataStoreFeedSourceRepository(context.feedSourceDataStore) }
+    val feedManagerViewModel = remember { FeedManagerViewModel(feedSourceRepository, scope) }
+    val rssFeedFetcher = remember { httpRssFeedFetcher() }
+    val articleRepository = remember { DefaultArticleRepository(feedSourceRepository, rssFeedFetcher) }
+    val timelineViewModel = remember { TimelineViewModel(articleRepository, scope) }
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
@@ -72,7 +78,7 @@ fun AppNavigation() {
             startDestination = ROUTE_TIMELINE,
             modifier = Modifier.padding(padding),
         ) {
-            composable(ROUTE_TIMELINE) { TimelineScreen() }
+            composable(ROUTE_TIMELINE) { TimelineScreen(timelineViewModel) }
             composable(ROUTE_FEED_MANAGER) { FeedManagerScreen(feedManagerViewModel) }
         }
     }

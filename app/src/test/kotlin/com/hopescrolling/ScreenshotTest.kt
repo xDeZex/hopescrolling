@@ -8,6 +8,9 @@ import com.hopescrolling.data.feed.FeedSource
 import com.hopescrolling.ui.screens.FeedManagerScreen
 import com.hopescrolling.ui.screens.FeedManagerViewModel
 import com.hopescrolling.ui.screens.TimelineScreen
+import com.hopescrolling.data.rss.Article
+import com.hopescrolling.ui.screens.TimelineViewModel
+import com.hopescrolling.util.FakeArticleRepository
 import com.hopescrolling.util.FakeFeedSourceRepository
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -60,7 +63,13 @@ class ScreenshotTest {
 
     @Test
     fun screenshot_timelineScreen() {
-        composeTestRule.setContent { TimelineScreen() }
+        val articles = listOf(
+            Article(title = "Android 16 Developer Preview Released", link = "https://a.com/1", description = "Google has released the first developer preview of Android 16, featuring new APIs for adaptive layouts.", pubDate = "Tue, 01 Apr 2026 09:00:00 GMT", feedSourceId = "android"),
+            Article(title = "Kotlin 2.2 Brings Improved Type Inference", link = "https://a.com/2", description = "The latest Kotlin release ships smarter type inference and faster incremental compilation.", pubDate = "Mon, 31 Mar 2026 14:30:00 GMT", feedSourceId = "kotlin"),
+            Article(title = "Jetpack Compose Stability Update", link = "https://a.com/3", description = null, pubDate = "Sun, 30 Mar 2026 08:00:00 GMT", feedSourceId = "android"),
+        )
+        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles), viewModelScope())
+        composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
         saveScreenshot("timeline_screen")
         assertTrue(File(screenshotsDir, "timeline_screen.png").exists())
     }
