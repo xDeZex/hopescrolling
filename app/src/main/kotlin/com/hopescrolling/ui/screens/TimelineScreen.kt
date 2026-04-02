@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
@@ -26,23 +26,23 @@ fun TimelineScreen(viewModel: TimelineViewModel) {
         modifier = Modifier
             .fillMaxSize()
             .testTag("timeline_screen"),
-        contentAlignment = Alignment.Center,
     ) {
         when {
-            uiState.isLoading -> CircularProgressIndicator(
-                modifier = Modifier.testTag("timeline_loading"),
-            )
-            uiState.error != null -> Text(
-                text = uiState.error!!,
-                modifier = Modifier.testTag("timeline_error"),
-            )
-            uiState.articles.isEmpty() -> Text(
-                text = "No articles yet. Add feeds to get started.",
-                modifier = Modifier.testTag("timeline_empty"),
-            )
+            uiState.isLoading -> CenteredFullScreen {
+                CircularProgressIndicator(modifier = Modifier.testTag("timeline_loading"))
+            }
+            uiState.error != null -> CenteredFullScreen {
+                Text(text = uiState.error!!, modifier = Modifier.testTag("timeline_error"))
+            }
+            uiState.articles.isEmpty() -> CenteredFullScreen {
+                Text(
+                    text = "No articles yet. Add feeds to get started.",
+                    modifier = Modifier.testTag("timeline_empty"),
+                )
+            }
             else -> LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(uiState.articles) { article ->
-                    ArticleCard(article)
+                itemsIndexed(uiState.articles) { index, article ->
+                    ArticleCard(article = article, index = index)
                 }
             }
         }
@@ -50,12 +50,21 @@ fun TimelineScreen(viewModel: TimelineViewModel) {
 }
 
 @Composable
-fun ArticleCard(article: Article) {
+private fun CenteredFullScreen(content: @Composable () -> Unit) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
+        content = { content() },
+    )
+}
+
+@Composable
+fun ArticleCard(article: Article, index: Int) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .testTag("article_card_${article.link}"),
+            .testTag("article_card_$index"),
     ) {
         Text(
             text = article.title,
