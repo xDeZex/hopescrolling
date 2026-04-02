@@ -11,8 +11,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.foundation.layout.padding
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -36,12 +36,9 @@ private const val ROUTE_FEED_MANAGER = "feed_manager"
 @Composable
 fun AppNavigation() {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     val feedSourceRepository = remember { DataStoreFeedSourceRepository(context.feedSourceDataStore) }
-    val feedManagerViewModel = remember { FeedManagerViewModel(feedSourceRepository, scope) }
     val rssFeedFetcher = remember { httpRssFeedFetcher() }
     val articleRepository = remember { DefaultArticleRepository(feedSourceRepository, rssFeedFetcher) }
-    val timelineViewModel = remember { TimelineViewModel(articleRepository, scope) }
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
@@ -78,8 +75,14 @@ fun AppNavigation() {
             startDestination = ROUTE_TIMELINE,
             modifier = Modifier.padding(padding),
         ) {
-            composable(ROUTE_TIMELINE) { TimelineScreen(timelineViewModel) }
-            composable(ROUTE_FEED_MANAGER) { FeedManagerScreen(feedManagerViewModel) }
+            composable(ROUTE_TIMELINE) {
+                val viewModel = viewModel { TimelineViewModel(articleRepository) }
+                TimelineScreen(viewModel)
+            }
+            composable(ROUTE_FEED_MANAGER) {
+                val viewModel = viewModel { FeedManagerViewModel(feedSourceRepository) }
+                FeedManagerScreen(viewModel)
+            }
         }
     }
 }

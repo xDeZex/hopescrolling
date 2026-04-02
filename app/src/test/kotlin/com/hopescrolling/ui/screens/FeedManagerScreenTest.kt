@@ -13,9 +13,12 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.text.AnnotatedString
 import com.hopescrolling.data.feed.FeedSource
 import com.hopescrolling.util.FakeFeedSourceRepository
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
+import org.junit.After
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -28,7 +31,11 @@ class FeedManagerScreenTest {
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    private fun viewModelScope(): CoroutineScope = TestScope(UnconfinedTestDispatcher())
+    @Before
+    fun setUp() = Dispatchers.setMain(UnconfinedTestDispatcher())
+
+    @After
+    fun tearDown() = Dispatchers.resetMain()
 
     @Test
     fun feedManagerScreen_showsFeedSourceNames() {
@@ -37,7 +44,7 @@ class FeedManagerScreenTest {
             FeedSource(id = "1", name = "Tech Blog", url = "https://tech.example.com/feed"),
             FeedSource(id = "2", name = "News Feed", url = "https://news.example.com/feed"),
         )
-        val viewModel = FeedManagerViewModel(repo, viewModelScope())
+        val viewModel = FeedManagerViewModel(repo)
         composeTestRule.setContent { FeedManagerScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithText("Tech Blog").assertIsDisplayed()
@@ -46,7 +53,7 @@ class FeedManagerScreenTest {
 
     @Test
     fun feedManagerScreen_hasAddInputAndButton() {
-        val viewModel = FeedManagerViewModel(FakeFeedSourceRepository(), viewModelScope())
+        val viewModel = FeedManagerViewModel(FakeFeedSourceRepository())
         composeTestRule.setContent { FeedManagerScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithTag("add_feed_input").assertIsDisplayed()
@@ -56,7 +63,7 @@ class FeedManagerScreenTest {
     @Test
     fun feedManagerScreen_addingUrlAppearsInList() {
         val repo = FakeFeedSourceRepository()
-        val viewModel = FeedManagerViewModel(repo, viewModelScope())
+        val viewModel = FeedManagerViewModel(repo)
         composeTestRule.setContent { FeedManagerScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithTag("add_feed_input").performTextInput("https://example.com/rss")
@@ -71,7 +78,7 @@ class FeedManagerScreenTest {
         repo.sources.value = listOf(
             FeedSource(id = "1", name = "Tech Blog", url = "https://tech.example.com/feed"),
         )
-        val viewModel = FeedManagerViewModel(repo, viewModelScope())
+        val viewModel = FeedManagerViewModel(repo)
         composeTestRule.setContent { FeedManagerScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithTag("delete_feed_1").performClick()
@@ -85,7 +92,7 @@ class FeedManagerScreenTest {
         repo.sources.value = listOf(
             FeedSource(id = "1", name = "Old Name", url = "https://example.com/feed"),
         )
-        val viewModel = FeedManagerViewModel(repo, viewModelScope())
+        val viewModel = FeedManagerViewModel(repo)
         composeTestRule.setContent { FeedManagerScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithTag("rename_feed_1").performClick()
