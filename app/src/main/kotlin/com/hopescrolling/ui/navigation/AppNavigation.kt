@@ -10,13 +10,19 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.hopescrolling.data.feed.DataStoreFeedSourceRepository
+import com.hopescrolling.data.feed.feedSourceDataStore
 import com.hopescrolling.ui.screens.FeedManagerScreen
+import com.hopescrolling.ui.screens.FeedManagerViewModel
 import com.hopescrolling.ui.screens.TimelineScreen
 
 private const val ROUTE_TIMELINE = "timeline"
@@ -25,6 +31,10 @@ private const val ROUTE_FEED_MANAGER = "feed_manager"
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavigation() {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val repository = remember { DataStoreFeedSourceRepository(context.feedSourceDataStore) }
+    val feedManagerViewModel = remember { FeedManagerViewModel(repository, scope) }
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
@@ -61,7 +71,7 @@ fun AppNavigation() {
             startDestination = ROUTE_TIMELINE,
         ) {
             composable(ROUTE_TIMELINE) { TimelineScreen() }
-            composable(ROUTE_FEED_MANAGER) { FeedManagerScreen() }
+            composable(ROUTE_FEED_MANAGER) { FeedManagerScreen(feedManagerViewModel) }
         }
         // suppress unused padding warning — padding will be used once screens have content
         @Suppress("UNUSED_EXPRESSION")
