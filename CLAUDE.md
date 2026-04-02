@@ -12,6 +12,8 @@ When asked to "automerge": fetch origin, check `git log origin/main..HEAD` and o
 
 After every commit, launch a subagent to review it (`git show HEAD`) and report findings before proceeding. If the commit touches any amended files, re-run the review on the amended commit before considering the work done.
 
+Every finding raised by the reviewer must be either fixed (in the current commit via amend) or tracked as a GitHub issue. Do not silently ignore reviewer findings. If a finding is out of scope for the current PR, file an issue for it before moving on.
+
 ## Commands
 
 `gradlew` is patched to fall back to Android Studio's JDK when `JAVA_HOME` is not set — no `JAVA_HOME` export needed locally. `org.gradle.java.home` is intentionally absent from `gradle.properties` so CI can use its own JDK.
