@@ -57,6 +57,11 @@ android {
     testOptions {
         unitTests {
             isIncludeAndroidResources = true
+            all {
+                if (!project.hasProperty("screenshots")) {
+                    it.exclude("**/ScreenshotTest*")
+                }
+            }
         }
     }
 }
