@@ -10,7 +10,7 @@ Each PR must have exactly one commit. All fixes and follow-ups go into the same 
 
 When asked to "automerge": fetch origin, check `git log origin/main..HEAD` and open PRs (`gh pr list`) to understand the current state, then create a PR for the latest commit and enable automerge (`gh pr merge --auto --rebase`).
 
-After every commit, launch a subagent to review it (`git show HEAD`) and report findings before proceeding.
+After every commit, launch a subagent to review it (`git show HEAD`) and report findings before proceeding. If the commit touches any amended files, re-run the review on the amended commit before considering the work done.
 
 ## Commands
 
@@ -21,7 +21,10 @@ After every commit, launch a subagent to review it (`git show HEAD`) and report 
 ./gradlew :app:testDebugUnitTest                # JVM unit tests
 ./gradlew :app:connectedDebugAndroidTest        # instrumented tests (requires emulator/device)
 ./gradlew :app:testDebugUnitTest --tests "com.hopescrolling.ThemeColorTest"  # single test class
+./gradlew :app:testDebugUnitTest -Pscreenshots --tests "com.hopescrolling.ScreenshotTest"  # screenshot tests (excluded from normal runs)
 ```
+
+After writing or changing any Compose UI code, run `./gradlew :app:testDebugUnitTest -Pscreenshots --tests "com.hopescrolling.ScreenshotTest"` and use the Read tool to inspect the PNGs in `screenshots/` to visually verify the layout. The directory is wiped and regenerated on each run.
 
 Emulator: `Pixel_7a` (Android 15). Launch app after installing:
 ```bash
