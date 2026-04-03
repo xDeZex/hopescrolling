@@ -20,10 +20,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.room.Room
 import com.hopescrolling.data.article.DefaultArticleRepository
 import com.hopescrolling.data.article.httpRssFeedFetcher
 import com.hopescrolling.data.feed.DataStoreFeedSourceRepository
 import com.hopescrolling.data.feed.feedSourceDataStore
+import com.hopescrolling.data.readstate.AppDatabase
+import com.hopescrolling.data.readstate.RoomReadStateRepository
 import com.hopescrolling.ui.screens.FeedManagerScreen
 import com.hopescrolling.ui.screens.FeedManagerViewModel
 import com.hopescrolling.ui.screens.TimelineScreen
@@ -39,6 +42,12 @@ fun AppNavigation() {
     val feedSourceRepository = remember { DataStoreFeedSourceRepository(context.feedSourceDataStore) }
     val rssFeedFetcher = remember { httpRssFeedFetcher() }
     val articleRepository = remember { DefaultArticleRepository(feedSourceRepository, rssFeedFetcher) }
+    val db = remember {
+        Room.databaseBuilder(context, AppDatabase::class.java, "hopescrolling-db")
+            .fallbackToDestructiveMigration()
+            .build()
+    }
+    val readStateRepository = remember(db) { RoomReadStateRepository(db.readArticleDao()) }
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
@@ -76,7 +85,7 @@ fun AppNavigation() {
             modifier = Modifier.padding(padding),
         ) {
             composable(ROUTE_TIMELINE) {
-                val viewModel = viewModel { TimelineViewModel(articleRepository) }
+                val viewModel = viewModel { TimelineViewModel(articleRepository, readStateRepository) }
                 TimelineScreen(viewModel)
             }
             composable(ROUTE_FEED_MANAGER) {
