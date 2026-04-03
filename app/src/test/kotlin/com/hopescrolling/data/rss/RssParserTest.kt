@@ -102,6 +102,27 @@ class RssParserTest {
         assertEquals("https://example.com/<path>", articles[0].link)
     }
 
+    // ── Behavior 6: numeric entity in title field ────────────────────────────
+
+    @Test
+    fun parse_cdataWithHtmlEntitiesInTitle_decodesEntities() {
+        val xml = """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <rss version="2.0">
+              <channel>
+                <item>
+                  <title><![CDATA[It&#8217;s a feature, not a bug]]></title>
+                  <link>https://example.com/1</link>
+                </item>
+              </channel>
+            </rss>
+        """.trimIndent()
+
+        val articles = RssParser.parse(xml, "feed-1")
+
+        assertEquals("It\u2019s a feature, not a bug", articles[0].title)
+    }
+
     // ── Behavior 4: CDATA HTML tags stripped ──────────────────────────────────
 
     @Test
