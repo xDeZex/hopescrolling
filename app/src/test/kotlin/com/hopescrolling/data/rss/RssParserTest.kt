@@ -80,6 +80,28 @@ class RssParserTest {
         assertEquals("A&B <tag> \"quoted\" 'apos' non breaking", articles[0].description)
     }
 
+    // ── Behavior 5: link field preserves raw value ────────────────────────────
+
+    @Test
+    fun parse_linkWithAngleBrackets_preservesRawValue() {
+        // Jsoup strips <path> as an HTML tag; link fields must bypass sanitize()
+        val xml = """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <rss version="2.0">
+              <channel>
+                <item>
+                  <title>Test</title>
+                  <link><![CDATA[https://example.com/<path>]]></link>
+                </item>
+              </channel>
+            </rss>
+        """.trimIndent()
+
+        val articles = RssParser.parse(xml, "feed-1")
+
+        assertEquals("https://example.com/<path>", articles[0].link)
+    }
+
     // ── Behavior 4: CDATA HTML tags stripped ──────────────────────────────────
 
     @Test

@@ -24,9 +24,9 @@ object RssParser {
         root.getElementsByTagName("item").toList().map { item ->
             Article(
                 title = item.text("title") ?: "",
-                link = item.text("link") ?: "",
+                link = item.rawText("link") ?: "",
                 description = item.text("description"),
-                pubDate = item.text("pubDate"),
+                pubDate = item.rawText("pubDate"),
                 feedSourceId = feedSourceId,
             )
         }
@@ -37,7 +37,7 @@ object RssParser {
                 title = entry.text("title") ?: "",
                 link = entry.attr("link", "href") ?: "",
                 description = entry.text("summary") ?: entry.text("content"),
-                pubDate = entry.text("published") ?: entry.text("updated"),
+                pubDate = entry.rawText("published") ?: entry.rawText("updated"),
                 feedSourceId = feedSourceId,
             )
         }
@@ -49,6 +49,9 @@ object RssParser {
         getElementsByTagName(tag).item(0)?.textContent
             ?.let { sanitize(it) }
             ?.takeIf { it.isNotEmpty() }
+
+    private fun Element.rawText(tag: String): String? =
+        getElementsByTagName(tag).item(0)?.textContent?.trim()?.takeIf { it.isNotEmpty() }
 
     private fun Element.attr(tag: String, attr: String): String? =
         (getElementsByTagName(tag).item(0) as? Element)?.getAttribute(attr)?.takeIf { it.isNotEmpty() }
