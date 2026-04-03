@@ -12,6 +12,7 @@ import com.hopescrolling.data.rss.Article
 import com.hopescrolling.ui.screens.TimelineViewModel
 import com.hopescrolling.util.FakeArticleRepository
 import com.hopescrolling.util.FakeFeedSourceRepository
+import com.hopescrolling.util.FakeReadStateRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -76,10 +77,24 @@ class ScreenshotTest {
             Article(title = "Kotlin 2.2 Brings Improved Type Inference", link = "https://a.com/2", description = "The latest Kotlin release ships smarter type inference and faster incremental compilation.", pubDate = "Mon, 31 Mar 2026 14:30:00 GMT", feedSourceId = "kotlin"),
             Article(title = "Jetpack Compose Stability Update", link = "https://a.com/3", description = null, pubDate = "Sun, 30 Mar 2026 08:00:00 GMT", feedSourceId = "android"),
         )
-        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles))
+        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles), FakeReadStateRepository())
         composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
         saveScreenshot("timeline_screen")
         assertTrue(File(screenshotsDir, "timeline_screen.png").exists())
+    }
+
+    @Test
+    fun screenshot_timelineScreen_withReadArticle() {
+        val articles = listOf(
+            Article(title = "Already Read Article", link = "https://a.com/1", description = "This article has been read and should appear dimmed.", pubDate = "Tue, 01 Apr 2026 09:00:00 GMT", feedSourceId = "android"),
+            Article(title = "Unread Article", link = "https://a.com/2", description = "This article has not been read yet.", pubDate = "Mon, 31 Mar 2026 14:30:00 GMT", feedSourceId = "kotlin"),
+        )
+        val readStateRepo = FakeReadStateRepository()
+        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles), readStateRepo)
+        viewModel.markRead("https://a.com/1")
+        composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
+        saveScreenshot("timeline_screen_read_state")
+        assertTrue(File(screenshotsDir, "timeline_screen_read_state.png").exists())
     }
 
     @Test

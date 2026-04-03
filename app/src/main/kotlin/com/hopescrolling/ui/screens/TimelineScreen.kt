@@ -19,6 +19,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -56,7 +57,12 @@ fun TimelineScreen(viewModel: TimelineViewModel) {
             }
             else -> LazyColumn(modifier = Modifier.fillMaxSize()) {
                 itemsIndexed(uiState.articles) { index, article ->
-                    ArticleCard(article = article, index = index)
+                    ArticleCard(
+                        article = article,
+                        index = index,
+                        isRead = uiState.readIds.contains(article.link),
+                        onRead = { viewModel.markRead(article.link) },
+                    )
                 }
             }
         }
@@ -73,10 +79,11 @@ private fun CenteredFullScreen(content: @Composable () -> Unit) {
 }
 
 @Composable
-fun ArticleCard(article: Article, index: Int) {
+fun ArticleCard(article: Article, index: Int, isRead: Boolean, onRead: () -> Unit) {
     val context = LocalContext.current
     Card(
         onClick = {
+            onRead()
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(article.link))
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             try {
@@ -88,7 +95,8 @@ fun ArticleCard(article: Article, index: Int) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .testTag("article_card_$index"),
+            .testTag("article_card_$index")
+            .alpha(if (isRead) 0.5f else 1.0f),
     ) {
         Text(
             text = article.title,

@@ -12,6 +12,8 @@ import com.hopescrolling.data.article.ArticleRepository
 import java.util.concurrent.atomic.AtomicBoolean
 import com.hopescrolling.data.rss.Article
 import com.hopescrolling.util.FakeArticleRepository
+import com.hopescrolling.util.FakeReadStateRepository
+import org.junit.Assert.assertEquals
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -42,7 +44,7 @@ class TimelineScreenTest {
         val dispatcher = StandardTestDispatcher()
         Dispatchers.setMain(dispatcher)
         val repo = FakeArticleRepository()
-        val viewModel = TimelineViewModel(repo)
+        val viewModel = TimelineViewModel(repo, FakeReadStateRepository())
         composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithTag("timeline_loading").assertIsDisplayed()
@@ -54,7 +56,7 @@ class TimelineScreenTest {
             Article(title = "First Post", link = "https://a.com/1", description = null, pubDate = null, feedSourceId = "f1"),
             Article(title = "Second Post", link = "https://a.com/2", description = null, pubDate = null, feedSourceId = "f1"),
         )
-        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles))
+        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles), FakeReadStateRepository())
         composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithText("First Post").assertIsDisplayed()
@@ -66,7 +68,7 @@ class TimelineScreenTest {
         val articles = listOf(
             Article(title = "Post With Desc", link = "https://a.com/1", description = "A summary of the post", pubDate = null, feedSourceId = "f1"),
         )
-        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles))
+        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles), FakeReadStateRepository())
         composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithText("A summary of the post").assertIsDisplayed()
@@ -75,7 +77,7 @@ class TimelineScreenTest {
     @Test
     fun timelineScreen_showsErrorMessage() {
         val repo = FakeArticleRepository(error = RuntimeException("could not load"))
-        val viewModel = TimelineViewModel(repo)
+        val viewModel = TimelineViewModel(repo, FakeReadStateRepository())
         composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithTag("timeline_error").assertIsDisplayed()
@@ -84,7 +86,7 @@ class TimelineScreenTest {
 
     @Test
     fun timelineScreen_showsEmptyStateWhenNoArticles() {
-        val viewModel = TimelineViewModel(FakeArticleRepository(articles = emptyList()))
+        val viewModel = TimelineViewModel(FakeArticleRepository(articles = emptyList()), FakeReadStateRepository())
         composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithTag("timeline_empty").assertIsDisplayed()
@@ -96,7 +98,7 @@ class TimelineScreenTest {
         val articles = listOf(
             Article(title = "No Desc Post", link = "https://a.com/1", description = null, pubDate = null, feedSourceId = "f1"),
         )
-        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles))
+        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles), FakeReadStateRepository())
         composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithText("No Desc Post").assertIsDisplayed()
@@ -108,7 +110,7 @@ class TimelineScreenTest {
         val articles = listOf(
             Article(title = "Post", link = "https://a.com/1", description = null, pubDate = null, feedSourceId = "f1", sourceName = "Tech Blog"),
         )
-        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles))
+        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles), FakeReadStateRepository())
         composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithText("Tech Blog").assertIsDisplayed()
@@ -119,7 +121,7 @@ class TimelineScreenTest {
         val articles = listOf(
             Article(title = "Post", link = "https://a.com/1", description = null, pubDate = "Mon, 01 Jan 2026 12:00:00 GMT", feedSourceId = "f1"),
         )
-        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles))
+        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles), FakeReadStateRepository())
         composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithText("Mon, 01 Jan 2026 12:00:00 GMT").assertIsDisplayed()
@@ -130,7 +132,7 @@ class TimelineScreenTest {
         val articles = listOf(
             Article(title = "Clickable Post", link = "https://a.com/1", description = null, pubDate = null, feedSourceId = "f1"),
         )
-        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles))
+        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles), FakeReadStateRepository())
         composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithTag("article_card_0").assertHasClickAction()
@@ -141,7 +143,7 @@ class TimelineScreenTest {
         val articles = listOf(
             Article(title = "Post", link = "https://a.com/1", description = null, pubDate = "Mon, 01 Jan 2026 12:00:00 GMT", feedSourceId = "f1", sourceName = "Tech Blog"),
         )
-        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles))
+        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles), FakeReadStateRepository())
         composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithText("Tech Blog · Mon, 01 Jan 2026 12:00:00 GMT").assertIsDisplayed()
@@ -150,7 +152,7 @@ class TimelineScreenTest {
     @Test
     fun timelineScreen_showsRetryButtonOnError() {
         val repo = FakeArticleRepository(error = RuntimeException("fetch failed"))
-        val viewModel = TimelineViewModel(repo)
+        val viewModel = TimelineViewModel(repo, FakeReadStateRepository())
         composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithTag("timeline_retry").assertIsDisplayed()
@@ -169,7 +171,7 @@ class TimelineScreenTest {
                 return articles
             }
         }
-        val viewModel = TimelineViewModel(repo)
+        val viewModel = TimelineViewModel(repo, FakeReadStateRepository())
         composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithTag("timeline_retry").assertIsDisplayed()
@@ -184,11 +186,25 @@ class TimelineScreenTest {
         val articles = listOf(
             Article(title = "Post", link = "https://a.com/1", description = null, pubDate = null, feedSourceId = "f1"),
         )
-        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles))
+        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles), FakeReadStateRepository())
         composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
 
         // Only the title text is present; no metadata row
         composeTestRule.onNodeWithText("Post").assertIsDisplayed()
         composeTestRule.onAllNodesWithText(" · ").assertCountEquals(0)
+    }
+
+    @Test
+    fun timelineScreen_tappingArticleCardCallsMarkRead() {
+        val articles = listOf(
+            Article(title = "Tap Me", link = "https://a.com/tap", description = null, pubDate = null, feedSourceId = "f1"),
+        )
+        val readStateRepo = FakeReadStateRepository()
+        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles), readStateRepo)
+        composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
+
+        composeTestRule.onNodeWithTag("article_card_0").performClick()
+
+        assertEquals(setOf("https://a.com/tap"), viewModel.uiState.value.readIds)
     }
 }
