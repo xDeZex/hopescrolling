@@ -8,6 +8,9 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToIndex
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeDown
 import com.hopescrolling.data.article.ArticleRepository
 import java.util.concurrent.atomic.AtomicBoolean
 import com.hopescrolling.data.rss.Article
@@ -192,6 +195,82 @@ class TimelineScreenTest {
         // Only the title text is present; no metadata row
         composeTestRule.onNodeWithText("Post").assertIsDisplayed()
         composeTestRule.onAllNodesWithText(" · ").assertCountEquals(0)
+    }
+
+    @Test
+    fun timelineScreen_pullToRefresh_atTop_triggersRefresh() {
+        val articles = listOf(
+            Article(title = "Post", link = "https://a.com/1", description = null, pubDate = null, feedSourceId = "f1"),
+        )
+        val repo = FakeArticleRepository(articles = articles)
+        val viewModel = TimelineViewModel(repo, FakeReadStateRepository())
+        composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
+        composeTestRule.waitUntil { !viewModel.uiState.value.isLoading }
+        val callCountAfterInit = repo.callCount
+
+        composeTestRule.onNodeWithTag("timeline_articles").performTouchInput { swipeDown() }
+
+        composeTestRule.waitUntil(3_000) { repo.callCount > callCountAfterInit }
+    }
+
+    @Test
+    fun timelineScreen_articlesRemainVisibleDuringRefresh() {
+        val dispatcher = StandardTestDispatcher()
+        Dispatchers.setMain(dispatcher)
+        val articles = listOf(
+            Article(title = "Existing Post", link = "https://a.com/1", description = null, pubDate = null, feedSourceId = "f1"),
+        )
+        val repo = FakeArticleRepository(articles = articles)
+        val viewModel = TimelineViewModel(repo, FakeReadStateRepository())
+        dispatcher.scheduler.advanceUntilIdle() // complete initial load
+
+        viewModel.refresh() // isLoading=true but articles already present
+
+        composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
+        composeTestRule.onNodeWithText("Existing Post").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("timeline_loading").assertDoesNotExist()
+    }
+
+    @Test
+    fun timelineScreen_refreshFab_visibleAfterScrollDown() {
+        val articles = (1..20).map {
+            Article(title = "Post $it", link = "https://a.com/$it", description = null, pubDate = null, feedSourceId = "f1")
+        }
+        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles), FakeReadStateRepository())
+        composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
+
+        composeTestRule.onNodeWithTag("timeline_articles").performScrollToIndex(10)
+
+        composeTestRule.onNodeWithTag("timeline_refresh_fab").assertIsDisplayed()
+    }
+
+    @Test
+    fun timelineScreen_refreshFab_clickTriggersRefresh() {
+        val articles = (1..20).map {
+            Article(title = "Post $it", link = "https://a.com/$it", description = null, pubDate = null, feedSourceId = "f1")
+        }
+        val repo = FakeArticleRepository(articles = articles)
+        val viewModel = TimelineViewModel(repo, FakeReadStateRepository())
+        composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
+        composeTestRule.waitUntil { !viewModel.uiState.value.isLoading }
+        val callCountAfterInit = repo.callCount
+
+        composeTestRule.onNodeWithTag("timeline_articles").performScrollToIndex(10)
+        composeTestRule.onNodeWithTag("timeline_refresh_fab").performClick()
+
+        composeTestRule.waitUntil { !viewModel.uiState.value.isLoading }
+        assertEquals(callCountAfterInit + 1, repo.callCount)
+    }
+
+    @Test
+    fun timelineScreen_refreshFab_notVisibleAtTop() {
+        val articles = listOf(
+            Article(title = "Post", link = "https://a.com/1", description = null, pubDate = null, feedSourceId = "f1"),
+        )
+        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles), FakeReadStateRepository())
+        composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
+
+        composeTestRule.onNodeWithTag("timeline_refresh_fab").assertDoesNotExist()
     }
 
     @Test
