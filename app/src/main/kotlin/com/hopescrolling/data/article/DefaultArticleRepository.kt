@@ -17,7 +17,14 @@ class DefaultArticleRepository(
 ) : ArticleRepository {
     override suspend fun getArticles(): List<Article> = coroutineScope {
         feedSourceRepository.getAll().first()
-            .map { source -> async { runCatching { fetcher.fetch(source.url).let { RssParser.parse(it, source.id) } }.getOrElse { emptyList() } } }
+            .map { source ->
+                async {
+                    runCatching {
+                        RssParser.parse(fetcher.fetch(source.url), source.id)
+                            .map { it.copy(sourceName = source.name) }
+                    }.getOrElse { emptyList() }
+                }
+            }
             .awaitAll()
             .flatten()
             .sortedByDescending { parsePubDate(it.pubDate) }

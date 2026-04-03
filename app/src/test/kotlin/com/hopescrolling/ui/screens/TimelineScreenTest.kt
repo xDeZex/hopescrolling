@@ -1,6 +1,7 @@
 package com.hopescrolling.ui.screens
 
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -97,5 +98,62 @@ class TimelineScreenTest {
 
         composeTestRule.onNodeWithText("No Desc Post").assertIsDisplayed()
         composeTestRule.onAllNodesWithText(descriptionText).assertCountEquals(0)
+    }
+
+    @Test
+    fun timelineScreen_showsSourceName() {
+        val articles = listOf(
+            Article(title = "Post", link = "https://a.com/1", description = null, pubDate = null, feedSourceId = "f1", sourceName = "Tech Blog"),
+        )
+        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles))
+        composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
+
+        composeTestRule.onNodeWithText("Tech Blog").assertIsDisplayed()
+    }
+
+    @Test
+    fun timelineScreen_showsPubDate() {
+        val articles = listOf(
+            Article(title = "Post", link = "https://a.com/1", description = null, pubDate = "Mon, 01 Jan 2026 12:00:00 GMT", feedSourceId = "f1"),
+        )
+        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles))
+        composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
+
+        composeTestRule.onNodeWithText("Mon, 01 Jan 2026 12:00:00 GMT").assertIsDisplayed()
+    }
+
+    @Test
+    fun timelineScreen_articleCardIsClickable() {
+        val articles = listOf(
+            Article(title = "Clickable Post", link = "https://a.com/1", description = null, pubDate = null, feedSourceId = "f1"),
+        )
+        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles))
+        composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
+
+        composeTestRule.onNodeWithTag("article_card_0").assertHasClickAction()
+    }
+
+    @Test
+    fun timelineScreen_showsSourceNameAndPubDateCombined() {
+        val articles = listOf(
+            Article(title = "Post", link = "https://a.com/1", description = null, pubDate = "Mon, 01 Jan 2026 12:00:00 GMT", feedSourceId = "f1", sourceName = "Tech Blog"),
+        )
+        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles))
+        composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
+
+        composeTestRule.onNodeWithText("Tech Blog · Mon, 01 Jan 2026 12:00:00 GMT").assertIsDisplayed()
+    }
+
+    @Test
+    fun timelineScreen_noMetadataWhenSourceNameEmptyAndNoPubDate() {
+        val articles = listOf(
+            Article(title = "Post", link = "https://a.com/1", description = null, pubDate = null, feedSourceId = "f1"),
+        )
+        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles))
+        composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
+
+        // Only the title text is present; no metadata row
+        composeTestRule.onNodeWithText("Post").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText(" · ").assertCountEquals(0)
     }
 }
