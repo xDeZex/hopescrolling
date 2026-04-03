@@ -4,7 +4,9 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import com.hopescrolling.data.article.httpRssFeedFetcher
 import com.hopescrolling.data.feed.FeedSource
+import com.hopescrolling.data.rss.RssParser
 import com.hopescrolling.ui.screens.FeedManagerScreen
 import com.hopescrolling.ui.screens.FeedManagerViewModel
 import com.hopescrolling.ui.screens.TimelineScreen
@@ -14,6 +16,7 @@ import com.hopescrolling.util.FakeArticleRepository
 import com.hopescrolling.util.FakeFeedSourceRepository
 import com.hopescrolling.util.FakeReadStateRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
@@ -95,6 +98,24 @@ class ScreenshotTest {
         composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
         saveScreenshot("timeline_screen_read_state")
         assertTrue(File(screenshotsDir, "timeline_screen_read_state.png").exists())
+    }
+
+    @Test
+    fun screenshot_timelineScreen_pragmaticEngineer() {
+        val url = "https://newsletter.pragmaticengineer.com/feed"
+        val xml = try {
+            runBlocking { httpRssFeedFetcher().fetch(url) }
+        } catch (e: Exception) {
+            org.junit.Assume.assumeNoException("Skipping: network unavailable", e)
+            error("unreachable")
+        }
+        val articles = RssParser.parse(xml, "pragmatic-engineer")
+            .map { it.copy(sourceName = "The Pragmatic Engineer") }
+            .take(10)
+        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles), FakeReadStateRepository())
+        composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
+        saveScreenshot("timeline_pragmatic_engineer")
+        assertTrue(File(screenshotsDir, "timeline_pragmatic_engineer.png").exists())
     }
 
     @Test
