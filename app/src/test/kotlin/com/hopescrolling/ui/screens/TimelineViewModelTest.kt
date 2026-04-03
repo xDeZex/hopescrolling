@@ -68,4 +68,39 @@ class TimelineViewModelTest {
 
         assertEquals(false, state.error.isNullOrBlank())
     }
+
+    @Test
+    fun `refresh resets state to loading while fetching`() = runTest {
+        val testDispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+        try {
+            val repo = FakeArticleRepository()
+            val viewModel = TimelineViewModel(repo)
+            testScheduler.advanceUntilIdle() // complete init fetch
+
+            viewModel.refresh()
+
+            assertEquals(true, viewModel.uiState.value.isLoading)
+            assertEquals(null, viewModel.uiState.value.error)
+        } finally {
+            Dispatchers.setMain(UnconfinedTestDispatcher(testScheduler))
+        }
+    }
+
+    @Test
+    fun `refresh re-fetches and emits articles`() = runTest {
+        val articles = listOf(
+            Article(title = "Refreshed", link = "https://a.com/1", description = null, pubDate = null, feedSourceId = "f1"),
+        )
+        val repo = FakeArticleRepository(articles = articles)
+        val viewModel = TimelineViewModel(repo)
+        viewModel.uiState.first { !it.isLoading } // wait for init
+        val countBeforeRefresh = repo.callCount
+
+        viewModel.refresh()
+        viewModel.uiState.first { !it.isLoading }
+
+        assertEquals(countBeforeRefresh + 1, repo.callCount)
+        assertEquals(articles, viewModel.uiState.value.articles)
+    }
 }

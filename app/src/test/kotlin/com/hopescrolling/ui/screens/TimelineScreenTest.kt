@@ -7,6 +7,9 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import com.hopescrolling.data.article.ArticleRepository
+import java.util.concurrent.atomic.AtomicBoolean
 import com.hopescrolling.data.rss.Article
 import com.hopescrolling.util.FakeArticleRepository
 import kotlinx.coroutines.Dispatchers
@@ -142,6 +145,38 @@ class TimelineScreenTest {
         composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithText("Tech Blog · Mon, 01 Jan 2026 12:00:00 GMT").assertIsDisplayed()
+    }
+
+    @Test
+    fun timelineScreen_showsRetryButtonOnError() {
+        val repo = FakeArticleRepository(error = RuntimeException("fetch failed"))
+        val viewModel = TimelineViewModel(repo)
+        composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
+
+        composeTestRule.onNodeWithTag("timeline_retry").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("timeline_retry").assertHasClickAction()
+    }
+
+    @Test
+    fun timelineScreen_retryButtonTriggersRefetchAndShowsArticles() {
+        val articles = listOf(
+            Article(title = "After Retry", link = "https://a.com/1", description = null, pubDate = null, feedSourceId = "f1"),
+        )
+        val shouldFail = AtomicBoolean(true)
+        val repo = object : ArticleRepository {
+            override suspend fun getArticles(): List<Article> {
+                if (shouldFail.get()) throw RuntimeException("fail")
+                return articles
+            }
+        }
+        val viewModel = TimelineViewModel(repo)
+        composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
+
+        composeTestRule.onNodeWithTag("timeline_retry").assertIsDisplayed()
+        shouldFail.set(false)
+        composeTestRule.onNodeWithTag("timeline_retry").performClick()
+
+        composeTestRule.onNodeWithText("After Retry").assertIsDisplayed()
     }
 
     @Test

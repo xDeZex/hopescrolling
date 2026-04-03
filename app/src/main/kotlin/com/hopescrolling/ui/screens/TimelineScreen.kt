@@ -4,11 +4,13 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
@@ -36,7 +38,15 @@ fun TimelineScreen(viewModel: TimelineViewModel) {
                 CircularProgressIndicator(modifier = Modifier.testTag("timeline_loading"))
             }
             uiState.error != null -> CenteredFullScreen {
-                Text(text = uiState.error!!, modifier = Modifier.testTag("timeline_error"))
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(text = uiState.error!!, modifier = Modifier.testTag("timeline_error"))
+                    Button(
+                        onClick = { viewModel.refresh() },
+                        modifier = Modifier.testTag("timeline_retry"),
+                    ) {
+                        Text("Retry")
+                    }
+                }
             }
             uiState.articles.isEmpty() -> CenteredFullScreen {
                 Text(
