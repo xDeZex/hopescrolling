@@ -1,5 +1,6 @@
 package com.hopescrolling.data.rss
 
+import org.jsoup.Jsoup
 import org.w3c.dom.Element
 import org.w3c.dom.NodeList
 import javax.xml.parsers.DocumentBuilderFactory
@@ -45,8 +46,12 @@ object RssParser {
         (0 until length).map { item(it) as Element }
 
     private fun Element.text(tag: String): String? =
-        getElementsByTagName(tag).item(0)?.textContent?.trim()?.takeIf { it.isNotEmpty() }
+        getElementsByTagName(tag).item(0)?.textContent
+            ?.let { sanitize(it) }
+            ?.takeIf { it.isNotEmpty() }
 
     private fun Element.attr(tag: String, attr: String): String? =
         (getElementsByTagName(tag).item(0) as? Element)?.getAttribute(attr)?.takeIf { it.isNotEmpty() }
+
+    private fun sanitize(text: String): String = Jsoup.parseBodyFragment(text).text()
 }
