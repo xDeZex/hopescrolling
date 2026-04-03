@@ -4,6 +4,8 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performScrollToIndex
 import com.hopescrolling.data.article.httpRssFeedFetcher
 import com.hopescrolling.data.feed.FeedSource
 import com.hopescrolling.data.rss.RssParser
@@ -116,6 +118,25 @@ class ScreenshotTest {
         composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
         saveScreenshot("timeline_pragmatic_engineer")
         assertTrue(File(screenshotsDir, "timeline_pragmatic_engineer.png").exists())
+    }
+
+    @Test
+    fun screenshot_timelineScreen_refreshFab() {
+        val articles = (1..15).map { i ->
+            Article(
+                title = "Article $i",
+                link = "https://a.com/$i",
+                description = "Description for article $i.",
+                pubDate = "Tue, 01 Apr 2026 09:00:00 GMT",
+                feedSourceId = "feed1",
+                sourceName = "Tech Blog",
+            )
+        }
+        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles), FakeReadStateRepository())
+        composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
+        composeTestRule.onNodeWithTag("timeline_articles").performScrollToIndex(8)
+        saveScreenshot("timeline_screen_refresh_fab")
+        assertTrue(File(screenshotsDir, "timeline_screen_refresh_fab.png").exists())
     }
 
     @Test

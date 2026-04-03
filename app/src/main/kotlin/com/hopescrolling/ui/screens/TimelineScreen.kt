@@ -10,13 +10,22 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -25,9 +34,16 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.hopescrolling.data.rss.Article
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimelineScreen(viewModel: TimelineViewModel) {
     val uiState by viewModel.uiState.collectAsState()
+    val listState = rememberLazyListState()
+    val showFab by remember {
+        derivedStateOf {
+            listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 0
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -35,7 +51,7 @@ fun TimelineScreen(viewModel: TimelineViewModel) {
             .testTag("timeline_screen"),
     ) {
         when {
-            uiState.isLoading -> CenteredFullScreen {
+            uiState.isLoading && uiState.articles.isEmpty() -> CenteredFullScreen {
                 CircularProgressIndicator(modifier = Modifier.testTag("timeline_loading"))
             }
             uiState.error != null -> CenteredFullScreen {
@@ -55,15 +71,38 @@ fun TimelineScreen(viewModel: TimelineViewModel) {
                     modifier = Modifier.testTag("timeline_empty"),
                 )
             }
-            else -> LazyColumn(modifier = Modifier.fillMaxSize()) {
-                itemsIndexed(uiState.articles) { index, article ->
-                    ArticleCard(
-                        article = article,
-                        index = index,
-                        isRead = uiState.readIds.contains(article.link),
-                        onRead = { viewModel.markRead(article.link) },
-                    )
+            else -> PullToRefreshBox(
+                isRefreshing = uiState.isLoading,
+                onRefresh = { viewModel.refresh() },
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .testTag("timeline_articles"),
+                ) {
+                    itemsIndexed(uiState.articles) { index, article ->
+                        ArticleCard(
+                            article = article,
+                            index = index,
+                            isRead = uiState.readIds.contains(article.link),
+                            onRead = { viewModel.markRead(article.link) },
+                        )
+                    }
                 }
+            }
+        }
+
+        if (showFab) {
+            FloatingActionButton(
+                onClick = { viewModel.refresh() },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp)
+                    .testTag("timeline_refresh_fab"),
+            ) {
+                Icon(Icons.Filled.Refresh, contentDescription = "Refresh")
             }
         }
     }
