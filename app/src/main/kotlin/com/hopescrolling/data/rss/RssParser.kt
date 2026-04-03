@@ -45,7 +45,21 @@ object RssParser {
         (0 until length).map { item(it) as Element }
 
     private fun Element.text(tag: String): String? =
-        getElementsByTagName(tag).item(0)?.textContent?.trim()?.takeIf { it.isNotEmpty() }
+        getElementsByTagName(tag).item(0)?.textContent?.trim()?.takeIf { it.isNotEmpty() }?.sanitize()
+
+    /** Decode numeric HTML entities (e.g. &#8217; → ') that survive XML CDATA parsing. */
+    private fun String.sanitize(): String {
+        if (!contains('&')) return this
+        return try {
+            val wrapped = "<r>${replace("&", "&amp;").replace("&amp;#", "&#")}</r>"
+            val doc = DocumentBuilderFactory.newInstance()
+                .newDocumentBuilder()
+                .parse(wrapped.byteInputStream())
+            doc.documentElement.textContent
+        } catch (_: Exception) {
+            this
+        }
+    }
 
     private fun Element.attr(tag: String, attr: String): String? =
         (getElementsByTagName(tag).item(0) as? Element)?.getAttribute(attr)?.takeIf { it.isNotEmpty() }
