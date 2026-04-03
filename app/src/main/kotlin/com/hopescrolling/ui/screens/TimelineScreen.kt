@@ -1,5 +1,8 @@
 package com.hopescrolling.ui.screens
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,6 +17,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.hopescrolling.data.rss.Article
@@ -60,7 +64,17 @@ private fun CenteredFullScreen(content: @Composable () -> Unit) {
 
 @Composable
 fun ArticleCard(article: Article, index: Int) {
+    val context = LocalContext.current
     Card(
+        onClick = {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(article.link))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            try {
+                context.startActivity(intent)
+            } catch (_: ActivityNotFoundException) {
+                // No browser available — ignore
+            }
+        },
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -68,12 +82,18 @@ fun ArticleCard(article: Article, index: Int) {
     ) {
         Text(
             text = article.title,
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
         )
         if (article.description != null) {
             Text(
                 text = article.description,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+        }
+        if (article.sourceName.isNotEmpty() || article.pubDate != null) {
+            Text(
+                text = listOfNotNull(article.sourceName.takeIf { it.isNotEmpty() }, article.pubDate).joinToString(" · "),
+                modifier = Modifier.padding(start = 16.dp, bottom = 16.dp, end = 16.dp),
             )
         }
     }

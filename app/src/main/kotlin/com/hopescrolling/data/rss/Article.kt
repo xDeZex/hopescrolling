@@ -5,5 +5,6 @@ data class Article(
     val link: String,
     val description: String?,
     val pubDate: String?,
-    val feedSourceId: String
+    val feedSourceId: String,
+    val sourceName: String = "",
 )
