@@ -46,7 +46,8 @@ import com.hopescrolling.ui.theme.Spacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TimelineScreen(viewModel: TimelineViewModel) {
+fun TimelineScreen(viewModel: TimelineViewModel, onOpen: ((String) -> Unit)? = null) {
+    val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
     val showFab by remember {
@@ -54,6 +55,17 @@ fun TimelineScreen(viewModel: TimelineViewModel) {
             listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 0
         }
     }
+    val launchBrowser: (String) -> Unit =
+        onOpen ?: { url ->
+            val intent =
+                Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            try {
+                context.startActivity(intent)
+            } catch (_: ActivityNotFoundException) {
+                // No browser available — ignore
+            }
+        }
 
     Box(
         modifier = Modifier
@@ -119,6 +131,7 @@ fun TimelineScreen(viewModel: TimelineViewModel) {
                             index = index,
                             isRead = uiState.readIds.contains(article.link),
                             onRead = { viewModel.markRead(article.link) },
+                            onOpen = launchBrowser,
                         )
                     }
                 }
@@ -149,18 +162,17 @@ private fun CenteredFullScreen(content: @Composable () -> Unit) {
 }
 
 @Composable
-fun ArticleCard(article: Article, index: Int, isRead: Boolean, onRead: () -> Unit) {
-    val context = LocalContext.current
+fun ArticleCard(
+    article: Article,
+    index: Int,
+    isRead: Boolean,
+    onRead: () -> Unit,
+    onOpen: (String) -> Unit,
+) {
     Card(
         onClick = {
             onRead()
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(article.link))
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            try {
-                context.startActivity(intent)
-            } catch (_: ActivityNotFoundException) {
-                // No browser available — ignore
-            }
+            onOpen(article.link)
         },
         modifier = Modifier
             .fillMaxWidth()
