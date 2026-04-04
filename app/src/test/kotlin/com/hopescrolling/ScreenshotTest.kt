@@ -31,6 +31,7 @@ import com.hopescrolling.util.FakeFeedSourceRepository
 import com.hopescrolling.util.FakeReadStateRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
@@ -197,6 +198,25 @@ class ScreenshotTest {
         composeTestRule.onNodeWithTag("timeline_articles").performScrollToIndex(8)
         saveScreenshot("timeline_screen_refresh_fab")
         assertTrue(File(screenshotsDir, "timeline_screen_refresh_fab.png").exists())
+    }
+
+    @Test
+    fun screenshot_timelineScreen_error() {
+        val repo = FakeArticleRepository(error = RuntimeException("Failed to load feeds"))
+        val viewModel = TimelineViewModel(repo, FakeReadStateRepository())
+        setTimelineContent(viewModel)
+        saveScreenshot("timeline_screen_error")
+        assertTrue(File(screenshotsDir, "timeline_screen_error.png").exists())
+    }
+
+    @Test
+    fun screenshot_timelineScreen_loading() {
+        val dispatcher = StandardTestDispatcher()
+        Dispatchers.setMain(dispatcher)
+        val viewModel = TimelineViewModel(FakeArticleRepository(), FakeReadStateRepository())
+        setTimelineContent(viewModel)
+        saveScreenshot("timeline_screen_loading")
+        assertTrue(File(screenshotsDir, "timeline_screen_loading.png").exists())
     }
 
     @Test
