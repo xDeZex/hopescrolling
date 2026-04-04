@@ -49,6 +49,6 @@ class PubDateFormatterTest {
     @Test
     fun formatPubDate_epoch_returnsNull() {
         // Epoch signals a parse failure — should return null
-        assertNull(formatPubDate("Mon, 01 Jan 2026 12:00:00 GMT".let { "garbage" }, now))
+        assertNull(formatPubDate("garbage", now))
     }
 }

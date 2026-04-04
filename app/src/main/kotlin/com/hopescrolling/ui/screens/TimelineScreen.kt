@@ -46,10 +46,11 @@ import androidx.compose.ui.unit.dp
 import com.hopescrolling.data.article.formatPubDate
 import com.hopescrolling.data.rss.Article
 import com.hopescrolling.ui.theme.Spacing
+import java.time.Instant
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TimelineScreen(viewModel: TimelineViewModel, onOpen: ((String) -> Unit)? = null) {
+fun TimelineScreen(viewModel: TimelineViewModel, onOpen: ((String) -> Unit)? = null, now: Instant = Instant.now()) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
@@ -135,6 +136,7 @@ fun TimelineScreen(viewModel: TimelineViewModel, onOpen: ((String) -> Unit)? = n
                             isRead = uiState.readIds.contains(article.link),
                             onRead = { viewModel.markRead(article.link) },
                             onOpen = launchBrowser,
+                            now = now,
                         )
                     }
                 }
@@ -171,6 +173,7 @@ fun ArticleCard(
     isRead: Boolean,
     onRead: () -> Unit,
     onOpen: (String) -> Unit,
+    now: Instant = Instant.now(),
 ) {
     Card(
         onClick = {
@@ -203,7 +206,7 @@ fun ArticleCard(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            val displayDate = formatPubDate(article.pubDate) ?: article.pubDate
+            val displayDate = formatPubDate(article.pubDate, now) ?: article.pubDate
             if (article.sourceName.isNotEmpty() || displayDate != null) {
                 Spacer(modifier = Modifier.height(Spacing.sm))
                 Text(

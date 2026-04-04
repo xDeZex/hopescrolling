@@ -13,6 +13,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToIndex
 import com.hopescrolling.data.article.ArticleRepository
+import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 import com.hopescrolling.data.rss.Article
 import com.hopescrolling.util.FakeArticleRepository
@@ -126,7 +127,8 @@ class TimelineScreenTest {
             Article(title = "Post", link = "https://a.com/1", description = null, pubDate = "Mon, 01 Jan 2026 12:00:00 GMT", feedSourceId = "f1"),
         )
         val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles), FakeReadStateRepository())
-        composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
+        val now = Instant.parse("2026-06-01T00:00:00Z")
+        composeTestRule.setContent { TimelineScreen(viewModel = viewModel, now = now) }
 
         composeTestRule.onNodeWithText("Jan 1").assertIsDisplayed()
     }
@@ -148,8 +150,8 @@ class TimelineScreenTest {
             Article(title = "Post", link = "https://a.com/1", description = null, pubDate = "Mon, 01 Jan 2026 12:00:00 GMT", feedSourceId = "f1", sourceName = "Tech Blog"),
         )
         val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles), FakeReadStateRepository())
-        composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
-
+        val now = Instant.parse("2026-06-01T00:00:00Z")
+        composeTestRule.setContent { TimelineScreen(viewModel = viewModel, now = now) }
         composeTestRule.onNodeWithText("Tech Blog · Jan 1").assertIsDisplayed()
     }
 
