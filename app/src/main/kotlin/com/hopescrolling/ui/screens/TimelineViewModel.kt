@@ -8,6 +8,7 @@ import com.hopescrolling.data.rss.Article
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -23,7 +24,8 @@ class TimelineViewModel(
     private val readStateRepository: ReadStateRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(TimelineUiState())
-    val uiState: StateFlow<TimelineUiState> = _uiState
+    val uiState: StateFlow<TimelineUiState> = _uiState.asStateFlow()
+
     private var fetchJob: Job? = null
 
     init {
@@ -41,10 +43,15 @@ class TimelineViewModel(
         fetchJob = viewModelScope.launch {
             runCatching { repository.getArticles() }
                 .onSuccess { articles ->
-                    _uiState.update { it.copy(articles = articles, isLoading = false) }
+                    _uiState.update { it.copy(articles = articles, isLoading = false, error = null) }
                 }
                 .onFailure { e ->
-                    _uiState.update { it.copy(isLoading = false, error = e.message ?: e::class.simpleName ?: "Unknown error") }
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = e.message ?: e::class.simpleName ?: "Unknown error",
+                        )
+                    }
                 }
         }
     }
