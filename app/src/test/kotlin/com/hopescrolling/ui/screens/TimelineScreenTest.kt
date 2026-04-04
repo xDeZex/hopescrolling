@@ -1,5 +1,8 @@
 package com.hopescrolling.ui.screens
 
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
@@ -276,6 +279,31 @@ class TimelineScreenTest {
         composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithTag("timeline_refresh_fab").assertDoesNotExist()
+    }
+
+    @Test
+    fun timelineScreen_readArticleCard_hasReadSemantics() {
+        val articles = listOf(
+            Article(title = "Read Post", link = "https://a.com/1", description = null, pubDate = null, feedSourceId = "f1"),
+        )
+        val readStateRepo = FakeReadStateRepository(initialReadIds = setOf("https://a.com/1"))
+        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles), readStateRepo)
+        composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
+
+        composeTestRule.onNodeWithTag("article_card_0")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Read"))
+    }
+
+    @Test
+    fun timelineScreen_unreadArticleCard_hasUnreadSemantics() {
+        val articles = listOf(
+            Article(title = "Unread Post", link = "https://a.com/1", description = null, pubDate = null, feedSourceId = "f1"),
+        )
+        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles), FakeReadStateRepository())
+        composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
+
+        composeTestRule.onNodeWithTag("article_card_0")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Unread"))
     }
 
     @Test

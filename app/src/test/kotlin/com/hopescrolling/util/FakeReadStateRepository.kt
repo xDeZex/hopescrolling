@@ -5,8 +5,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 
-class FakeReadStateRepository : ReadStateRepository {
-    private val readIds = MutableStateFlow<Set<String>>(emptySet())
+class FakeReadStateRepository(initialReadIds: Set<String> = emptySet()) : ReadStateRepository {
+    private val readIds = MutableStateFlow<Set<String>>(initialReadIds)
 
     override fun getReadIds(): Flow<Set<String>> = readIds
 
