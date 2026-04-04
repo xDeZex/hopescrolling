@@ -10,8 +10,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Rebase all open PRs
-        uses: peter-evans/rebase@v3
         with:
+          fetch-depth: 0
           token: ${{ secrets.AUTOREBASE_TOKEN }}
+
+      - name: Rebase oldest open PR
+        env:
+          GH_TOKEN: ${{ secrets.AUTOREBASE_TOKEN }}
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+
+          PR_DATA=$(gh pr list --state open --base main \
+            --json number,headRefName \
+            --jq 'sort_by(.number) | .[0]')
+
+          NUMBER=$(echo "$PR_DATA" | jq -r '.number')
+          BRANCH=$(echo "$PR_DATA" | jq -r '.headRefName')
+
+          if [ "$NUMBER" = "null" ] || [ -z "$NUMBER" ]; then
+            echo "No open PRs to rebase."
+            exit 0
+          fi
+
+          echo "Rebasing PR #$NUMBER ($BRANCH) onto main"
+
+          git fetch origin "$BRANCH"
+          git checkout "$BRANCH"
+          git rebase origin/main || { git rebase --abort; echo "Conflict — skipping PR #$NUMBER"; exit 0; }
+          git push origin "$BRANCH" --force-with-lease
