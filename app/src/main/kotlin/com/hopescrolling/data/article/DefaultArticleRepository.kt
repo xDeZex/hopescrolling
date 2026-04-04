@@ -8,9 +8,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
-import java.text.SimpleDateFormat
-import java.time.Instant
-import java.util.Locale
 
 class DefaultArticleRepository(
     private val feedSourceRepository: FeedSourceRepository,
@@ -31,22 +28,5 @@ class DefaultArticleRepository(
             .flatten()
             .sortedByDescending { parsePubDate(it.pubDate) }
             .distinctBy { it.link }
-    }
-
-    private fun parsePubDate(pubDate: String?): Instant {
-        if (pubDate == null) return Instant.EPOCH
-        // Try ISO 8601
-        runCatching { return Instant.parse(pubDate) }
-        // Try RFC 822
-        val rfc822Formats = listOf(
-            "EEE, dd MMM yyyy HH:mm:ss Z",
-            "dd MMM yyyy HH:mm:ss Z",
-        )
-        for (fmt in rfc822Formats) {
-            runCatching {
-                return SimpleDateFormat(fmt, Locale.ENGLISH).apply { isLenient = false }.parse(pubDate)!!.toInstant()
-            }
-        }
-        return Instant.EPOCH
     }
 }
