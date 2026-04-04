@@ -286,4 +286,20 @@ class TimelineScreenTest {
 
         assertEquals(setOf("https://a.com/tap"), viewModel.uiState.value.readIds)
     }
+
+    @Test
+    fun timelineScreen_tappingArticleCardCallsOnOpen() {
+        val articles = listOf(
+            Article(title = "Open Me", link = "https://a.com/open", description = null, pubDate = null, feedSourceId = "f1"),
+        )
+        val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles), FakeReadStateRepository())
+        val openedUrls = mutableListOf<String>()
+        composeTestRule.setContent {
+            TimelineScreen(viewModel = viewModel, onOpen = { url -> openedUrls.add(url) })
+        }
+
+        composeTestRule.onNodeWithTag("article_card_0").performClick()
+
+        assertEquals(listOf("https://a.com/open"), openedUrls)
+    }
 }
