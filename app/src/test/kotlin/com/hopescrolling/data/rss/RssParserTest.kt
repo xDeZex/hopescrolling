@@ -25,7 +25,7 @@ class RssParserTest {
             </rss>
         """.trimIndent()
 
-        val articles = RssParser.parse(xml, "feed-1")
+        val articles = DefaultRssParser.parse(xml, "feed-1")
 
         assertEquals(1, articles.size)
         val a = articles[0]
@@ -53,7 +53,7 @@ class RssParserTest {
             </rss>
         """.trimIndent()
 
-        val articles = RssParser.parse(xml, "feed-1")
+        val articles = DefaultRssParser.parse(xml, "feed-1")
 
         assertEquals("Em dash \u2013 and \u201csmart quotes\u201d", articles[0].description)
     }
@@ -75,7 +75,7 @@ class RssParserTest {
             </rss>
         """.trimIndent()
 
-        val articles = RssParser.parse(xml, "feed-1")
+        val articles = DefaultRssParser.parse(xml, "feed-1")
 
         assertEquals("A&B <tag> \"quoted\" 'apos' non breaking", articles[0].description)
     }
@@ -97,7 +97,7 @@ class RssParserTest {
             </rss>
         """.trimIndent()
 
-        val articles = RssParser.parse(xml, "feed-1")
+        val articles = DefaultRssParser.parse(xml, "feed-1")
 
         assertEquals("https://example.com/<path>", articles[0].link)
     }
@@ -118,7 +118,7 @@ class RssParserTest {
             </rss>
         """.trimIndent()
 
-        val articles = RssParser.parse(xml, "feed-1")
+        val articles = DefaultRssParser.parse(xml, "feed-1")
 
         assertEquals("It\u2019s a feature, not a bug", articles[0].title)
     }
@@ -140,7 +140,7 @@ class RssParserTest {
             </rss>
         """.trimIndent()
 
-        val articles = RssParser.parse(xml, "feed-1")
+        val articles = DefaultRssParser.parse(xml, "feed-1")
 
         assertEquals("First paragraph Second paragraph", articles[0].description)
     }

@@ -19,7 +19,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performScrollToIndex
 import com.hopescrolling.data.article.httpRssFeedFetcher
 import com.hopescrolling.data.feed.FeedSource
-import com.hopescrolling.data.rss.RssParser
+import com.hopescrolling.data.rss.DefaultRssParser
 import com.hopescrolling.ui.screens.FeedManagerScreen
 import com.hopescrolling.ui.screens.FeedManagerViewModel
 import com.hopescrolling.ui.screens.TimelineScreen
@@ -171,7 +171,7 @@ class ScreenshotTest {
             org.junit.Assume.assumeNoException("Skipping: network unavailable", e)
             error("unreachable")
         }
-        val articles = RssParser.parse(xml, "pragmatic-engineer")
+        val articles = DefaultRssParser.parse(xml, "pragmatic-engineer")
             .map { it.copy(sourceName = "The Pragmatic Engineer") }
             .take(10)
         val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles), FakeReadStateRepository())

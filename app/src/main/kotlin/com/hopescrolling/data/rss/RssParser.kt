@@ -5,8 +5,12 @@ import org.w3c.dom.Element
 import org.w3c.dom.NodeList
 import javax.xml.parsers.DocumentBuilderFactory
 
-object RssParser {
-    fun parse(xml: String, feedSourceId: String): List<Article> {
+fun interface RssParser {
+    fun parse(xml: String, feedSourceId: String): List<Article>
+}
+
+object DefaultRssParser : RssParser {
+    override fun parse(xml: String, feedSourceId: String): List<Article> {
         val doc = DocumentBuilderFactory.newInstance()
             .newDocumentBuilder()
             .parse(xml.byteInputStream())
