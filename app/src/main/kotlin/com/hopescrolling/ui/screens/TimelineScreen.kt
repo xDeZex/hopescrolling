@@ -43,6 +43,7 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.hopescrolling.data.article.formatPubDate
 import com.hopescrolling.data.rss.Article
 import com.hopescrolling.ui.theme.Spacing
 
@@ -202,12 +203,13 @@ fun ArticleCard(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            if (article.sourceName.isNotEmpty() || article.pubDate != null) {
+            val displayDate = formatPubDate(article.pubDate) ?: article.pubDate
+            if (article.sourceName.isNotEmpty() || displayDate != null) {
                 Spacer(modifier = Modifier.height(Spacing.sm))
                 Text(
                     text = listOfNotNull(
                         article.sourceName.takeIf { it.isNotEmpty() },
-                        article.pubDate,
+                        displayDate,
                     ).joinToString(" · "),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,

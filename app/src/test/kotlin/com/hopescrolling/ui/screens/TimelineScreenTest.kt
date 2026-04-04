@@ -128,7 +128,7 @@ class TimelineScreenTest {
         val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles), FakeReadStateRepository())
         composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
 
-        composeTestRule.onNodeWithText("Mon, 01 Jan 2026 12:00:00 GMT").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Jan 1").assertIsDisplayed()
     }
 
     @Test
@@ -150,7 +150,7 @@ class TimelineScreenTest {
         val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles), FakeReadStateRepository())
         composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
 
-        composeTestRule.onNodeWithText("Tech Blog · Mon, 01 Jan 2026 12:00:00 GMT").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Tech Blog · Jan 1").assertIsDisplayed()
     }
 
     @Test
