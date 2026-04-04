@@ -3,6 +3,17 @@ package com.hopescrolling
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBar
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performScrollToIndex
@@ -14,6 +25,7 @@ import com.hopescrolling.ui.screens.FeedManagerViewModel
 import com.hopescrolling.ui.screens.TimelineScreen
 import com.hopescrolling.data.rss.Article
 import com.hopescrolling.ui.screens.TimelineViewModel
+import com.hopescrolling.ui.theme.HopescrollingTheme
 import com.hopescrolling.util.FakeArticleRepository
 import com.hopescrolling.util.FakeFeedSourceRepository
 import com.hopescrolling.util.FakeReadStateRepository
@@ -75,6 +87,54 @@ class ScreenshotTest {
         }
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
+    private fun setTimelineContent(viewModel: TimelineViewModel) {
+        composeTestRule.setContent {
+            HopescrollingTheme {
+                Scaffold(
+                    topBar = {
+                        TopAppBar(
+                            title = {},
+                            actions = {
+                                IconButton(onClick = {}) {
+                                    Icon(Icons.Default.Settings, contentDescription = "Manage feeds")
+                                }
+                            },
+                        )
+                    },
+                ) { padding ->
+                    Box(modifier = Modifier.padding(padding)) {
+                        TimelineScreen(viewModel = viewModel)
+                    }
+                }
+            }
+        }
+    }
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    private fun setFeedManagerContent(viewModel: FeedManagerViewModel) {
+        composeTestRule.setContent {
+            HopescrollingTheme {
+                Scaffold(
+                    topBar = {
+                        TopAppBar(
+                            title = {},
+                            navigationIcon = {
+                                IconButton(onClick = {}) {
+                                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                                }
+                            },
+                        )
+                    },
+                ) { padding ->
+                    Box(modifier = Modifier.padding(padding)) {
+                        FeedManagerScreen(viewModel = viewModel)
+                    }
+                }
+            }
+        }
+    }
+
     @Test
     fun screenshot_timelineScreen() {
         val articles = listOf(
@@ -83,7 +143,7 @@ class ScreenshotTest {
             Article(title = "Jetpack Compose Stability Update", link = "https://a.com/3", description = null, pubDate = "Sun, 30 Mar 2026 08:00:00 GMT", feedSourceId = "android"),
         )
         val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles), FakeReadStateRepository())
-        composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
+        setTimelineContent(viewModel)
         saveScreenshot("timeline_screen")
         assertTrue(File(screenshotsDir, "timeline_screen.png").exists())
     }
@@ -97,7 +157,7 @@ class ScreenshotTest {
         val readStateRepo = FakeReadStateRepository()
         val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles), readStateRepo)
         viewModel.markRead("https://a.com/1")
-        composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
+        setTimelineContent(viewModel)
         saveScreenshot("timeline_screen_read_state")
         assertTrue(File(screenshotsDir, "timeline_screen_read_state.png").exists())
     }
@@ -115,7 +175,7 @@ class ScreenshotTest {
             .map { it.copy(sourceName = "The Pragmatic Engineer") }
             .take(10)
         val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles), FakeReadStateRepository())
-        composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
+        setTimelineContent(viewModel)
         saveScreenshot("timeline_pragmatic_engineer")
         assertTrue(File(screenshotsDir, "timeline_pragmatic_engineer.png").exists())
     }
@@ -133,7 +193,7 @@ class ScreenshotTest {
             )
         }
         val viewModel = TimelineViewModel(FakeArticleRepository(articles = articles), FakeReadStateRepository())
-        composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
+        setTimelineContent(viewModel)
         composeTestRule.onNodeWithTag("timeline_articles").performScrollToIndex(8)
         saveScreenshot("timeline_screen_refresh_fab")
         assertTrue(File(screenshotsDir, "timeline_screen_refresh_fab.png").exists())
@@ -142,7 +202,7 @@ class ScreenshotTest {
     @Test
     fun screenshot_feedManagerScreen_empty() {
         val viewModel = FeedManagerViewModel(FakeFeedSourceRepository())
-        composeTestRule.setContent { FeedManagerScreen(viewModel = viewModel) }
+        setFeedManagerContent(viewModel)
         saveScreenshot("feed_manager_empty")
         assertTrue(File(screenshotsDir, "feed_manager_empty.png").exists())
     }
@@ -155,7 +215,7 @@ class ScreenshotTest {
             FeedSource(id = "2", name = "News Feed", url = "https://news.example.com/feed"),
         )
         val viewModel = FeedManagerViewModel(repo)
-        composeTestRule.setContent { FeedManagerScreen(viewModel = viewModel) }
+        setFeedManagerContent(viewModel)
         saveScreenshot("feed_manager_with_feeds")
         assertTrue(File(screenshotsDir, "feed_manager_with_feeds.png").exists())
     }

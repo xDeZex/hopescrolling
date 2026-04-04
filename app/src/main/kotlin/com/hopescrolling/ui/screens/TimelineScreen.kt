@@ -3,22 +3,29 @@ package com.hopescrolling.ui.screens
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -31,8 +38,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hopescrolling.data.rss.Article
+import com.hopescrolling.ui.theme.Spacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,8 +65,24 @@ fun TimelineScreen(viewModel: TimelineViewModel) {
                 CircularProgressIndicator(modifier = Modifier.testTag("timeline_loading"))
             }
             uiState.error != null -> CenteredFullScreen {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = uiState.error!!, modifier = Modifier.testTag("timeline_error"))
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+                    modifier = Modifier.padding(Spacing.xl),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(48.dp),
+                    )
+                    Text(
+                        text = uiState.error!!,
+                        modifier = Modifier.testTag("timeline_error"),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center,
+                    )
                     Button(
                         onClick = { viewModel.refresh() },
                         modifier = Modifier.testTag("timeline_retry"),
@@ -67,8 +93,13 @@ fun TimelineScreen(viewModel: TimelineViewModel) {
             }
             uiState.articles.isEmpty() -> CenteredFullScreen {
                 Text(
-                    text = "No articles yet. Add feeds to get started.",
-                    modifier = Modifier.testTag("timeline_empty"),
+                    text = "No articles yet.\nAdd feeds to get started.",
+                    modifier = Modifier
+                        .testTag("timeline_empty")
+                        .padding(Spacing.xl),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
                 )
             }
             else -> PullToRefreshBox(
@@ -99,7 +130,7 @@ fun TimelineScreen(viewModel: TimelineViewModel) {
                 onClick = { viewModel.refresh() },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(16.dp)
+                    .padding(Spacing.lg)
                     .testTag("timeline_refresh_fab"),
             ) {
                 Icon(Icons.Filled.Refresh, contentDescription = "Refresh")
@@ -133,25 +164,40 @@ fun ArticleCard(article: Article, index: Int, isRead: Boolean, onRead: () -> Uni
         },
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = Spacing.lg, vertical = Spacing.sm)
             .testTag("article_card_$index")
             .alpha(if (isRead) 0.5f else 1.0f),
+        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
-        Text(
-            text = article.title,
-            modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
-        )
-        if (article.description != null) {
+        Column(modifier = Modifier.padding(Spacing.lg)) {
             Text(
-                text = article.description,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                text = article.title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis,
             )
-        }
-        if (article.sourceName.isNotEmpty() || article.pubDate != null) {
-            Text(
-                text = listOfNotNull(article.sourceName.takeIf { it.isNotEmpty() }, article.pubDate).joinToString(" · "),
-                modifier = Modifier.padding(start = 16.dp, bottom = 16.dp, end = 16.dp),
-            )
+            if (article.description != null) {
+                Spacer(modifier = Modifier.height(Spacing.sm))
+                Text(
+                    text = article.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            if (article.sourceName.isNotEmpty() || article.pubDate != null) {
+                Spacer(modifier = Modifier.height(Spacing.sm))
+                Text(
+                    text = listOfNotNull(
+                        article.sourceName.takeIf { it.isNotEmpty() },
+                        article.pubDate,
+                    ).joinToString(" · "),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }
