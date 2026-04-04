@@ -38,6 +38,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -177,6 +179,7 @@ fun ArticleCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = Spacing.lg, vertical = Spacing.sm)
+            .semantics { stateDescription = if (isRead) "Read" else "Unread" }
             .testTag("article_card_$index")
             .alpha(if (isRead) 0.5f else 1.0f),
         border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant),
