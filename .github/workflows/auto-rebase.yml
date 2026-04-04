@@ -10,11 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.AUTOREBASE_TOKEN }}
 
       - name: Rebase all open PRs
-        uses: cirrus-actions/rebase@1.8
-        env:
-          GITHUB_TOKEN: ${{ secrets.AUTOREBASE_TOKEN }}
+        uses: peter-evans/rebase@v3
+        with:
+          token: ${{ secrets.AUTOREBASE_TOKEN }}
