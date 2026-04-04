@@ -1,0 +1,38 @@
+package com.hopescrolling
+
+import android.content.Context
+import androidx.room.Room
+import com.hopescrolling.data.article.ArticleRepository
+import com.hopescrolling.data.article.DefaultArticleRepository
+import com.hopescrolling.data.article.RssFeedFetcher
+import com.hopescrolling.data.article.httpRssFeedFetcher
+import com.hopescrolling.data.feed.DataStoreFeedSourceRepository
+import com.hopescrolling.data.feed.FeedSourceRepository
+import com.hopescrolling.data.feed.feedSourceDataStore
+import com.hopescrolling.data.readstate.AppDatabase
+import com.hopescrolling.data.readstate.ReadStateRepository
+import com.hopescrolling.data.readstate.RoomReadStateRepository
+
+class AppContainer(context: Context) {
+    val feedSourceRepository: FeedSourceRepository by lazy {
+        DataStoreFeedSourceRepository(context.feedSourceDataStore)
+    }
+
+    val rssFeedFetcher: RssFeedFetcher by lazy {
+        httpRssFeedFetcher()
+    }
+
+    val articleRepository: ArticleRepository by lazy {
+        DefaultArticleRepository(feedSourceRepository, rssFeedFetcher)
+    }
+
+    val db: AppDatabase by lazy {
+        Room.databaseBuilder(context, AppDatabase::class.java, "hopescrolling-db")
+            .fallbackToDestructiveMigration()
+            .build()
+    }
+
+    val readStateRepository: ReadStateRepository by lazy {
+        RoomReadStateRepository(db.readArticleDao())
+    }
+}
