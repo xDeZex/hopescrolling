@@ -34,7 +34,7 @@ jobs:
         with:
           tag_name: release-${{ steps.sha.outputs.short }}
           name: release-${{ steps.sha.outputs.short }}
-          prerelease: true
+          make_latest: true
           files: app/build/outputs/apk/debug/app-debug.apk
 
       - name: Update rolling latest release
@@ -43,4 +43,5 @@ jobs:
           tag_name: latest
           name: Latest build
           prerelease: true
+          make_latest: false
           files: app/build/outputs/apk/debug/app-debug.apk
