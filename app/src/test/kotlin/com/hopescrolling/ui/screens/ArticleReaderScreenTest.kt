@@ -5,6 +5,8 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.test.core.app.ApplicationProvider
 import com.hopescrolling.data.article.ArticleContent
 import com.hopescrolling.util.FakeArticleContentFetcher
 import kotlinx.coroutines.Dispatchers
@@ -18,6 +20,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows
+import org.robolectric.shadows.ShadowToast
 
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -43,6 +47,22 @@ class ArticleReaderScreenTest {
         composeTestRule.onNodeWithTag("reader_error").assertIsDisplayed()
         composeTestRule.onNodeWithTag("reader_open_in_browser").assertIsDisplayed()
         composeTestRule.onNodeWithTag("reader_open_in_browser").assertHasClickAction()
+    }
+
+    @Test
+    fun readerScreen_showsToastWhenNoBrowserAppFound() {
+        val app = ApplicationProvider.getApplicationContext<android.app.Application>()
+        Shadows.shadowOf(app).checkActivities(true)
+
+        val viewModel = ArticleReaderViewModel(
+            FakeArticleContentFetcher(Result.failure(RuntimeException("connection refused"))),
+            "https://example.com/article",
+        )
+        composeTestRule.setContent { ArticleReaderScreen(viewModel = viewModel) }
+
+        composeTestRule.onNodeWithTag("reader_open_in_browser").performClick()
+
+        assert(ShadowToast.getTextOfLatestToast() == "No browser app found")
     }
 
     @Test

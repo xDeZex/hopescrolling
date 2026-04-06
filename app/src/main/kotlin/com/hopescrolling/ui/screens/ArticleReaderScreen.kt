@@ -3,6 +3,7 @@ package com.hopescrolling.ui.screens
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -88,7 +89,9 @@ fun ArticleReaderScreen(viewModel: ArticleReaderViewModel) {
                             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         try {
                             context.startActivity(intent)
-                        } catch (_: ActivityNotFoundException) {}
+                        } catch (_: ActivityNotFoundException) {
+                            Toast.makeText(context, "No browser app found", Toast.LENGTH_SHORT).show()
+                        }
                     },
                     modifier = Modifier.testTag("reader_open_in_browser"),
                 ) {
