@@ -2,10 +2,12 @@ package com.hopescrolling
 
 import android.content.Context
 import androidx.room.Room
+import com.hopescrolling.data.article.ArticleContentFetcher
 import com.hopescrolling.data.article.ArticleRepository
 import com.hopescrolling.data.article.DefaultArticleRepository
 import com.hopescrolling.data.article.RssFeedFetcher
 import com.hopescrolling.data.article.httpRssFeedFetcher
+import com.hopescrolling.data.article.jsoupArticleContentFetcher
 import com.hopescrolling.data.feed.DataStoreFeedSourceRepository
 import com.hopescrolling.data.feed.FeedSourceRepository
 import com.hopescrolling.data.feed.feedSourceDataStore
@@ -34,5 +36,9 @@ class AppContainer(context: Context) {
 
     val readStateRepository: ReadStateRepository by lazy {
         RoomReadStateRepository(db.readArticleDao())
+    }
+
+    val articleContentFetcher: ArticleContentFetcher by lazy {
+        jsoupArticleContentFetcher()
     }
 }

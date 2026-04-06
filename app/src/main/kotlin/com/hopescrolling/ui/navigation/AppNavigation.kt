@@ -14,6 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.foundation.layout.padding
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.Modifier
+import android.net.Uri
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.navigation.compose.NavHost
@@ -21,6 +22,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.hopescrolling.AppContainer
+import com.hopescrolling.ui.screens.ArticleReaderScreen
+import com.hopescrolling.ui.screens.ArticleReaderViewModel
 import com.hopescrolling.ui.screens.FeedManagerScreen
 import com.hopescrolling.ui.screens.FeedManagerViewModel
 import com.hopescrolling.ui.screens.TimelineScreen
@@ -28,6 +31,7 @@ import com.hopescrolling.ui.screens.TimelineViewModel
 
 private const val ROUTE_TIMELINE = "timeline"
 private const val ROUTE_FEED_MANAGER = "feed_manager"
+private const val ROUTE_READER = "reader/{encodedUrl}"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,7 +47,7 @@ fun AppNavigation() {
             TopAppBar(
                 title = {},
                 navigationIcon = {
-                    if (currentRoute == ROUTE_FEED_MANAGER) {
+                    if (currentRoute == ROUTE_FEED_MANAGER || currentRoute?.startsWith("reader/") == true) {
                         IconButton(
                             onClick = { navController.popBackStack() },
                             modifier = Modifier.testTag("back_button"),
@@ -72,11 +76,19 @@ fun AppNavigation() {
         ) {
             composable(ROUTE_TIMELINE) {
                 val viewModel = viewModel { TimelineViewModel(container.articleRepository, container.readStateRepository) }
-                TimelineScreen(viewModel)
+                TimelineScreen(viewModel, onOpen = { url ->
+                    navController.navigate("reader/${Uri.encode(url)}")
+                })
             }
             composable(ROUTE_FEED_MANAGER) {
                 val viewModel = viewModel { FeedManagerViewModel(container.feedSourceRepository) }
                 FeedManagerScreen(viewModel)
+            }
+            composable(ROUTE_READER) { backStackEntry ->
+                val encodedUrl = backStackEntry.arguments?.getString("encodedUrl") ?: return@composable
+                val url = Uri.decode(encodedUrl)
+                val viewModel = viewModel { ArticleReaderViewModel(container.articleContentFetcher, url) }
+                ArticleReaderScreen(viewModel)
             }
         }
     }

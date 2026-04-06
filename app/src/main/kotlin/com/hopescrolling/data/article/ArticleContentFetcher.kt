@@ -1,0 +1,55 @@
+package com.hopescrolling.data.article
+
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
+import org.jsoup.nodes.Element
+import java.io.IOException
+import java.net.HttpURLConnection
+import java.net.URL
+
+interface ArticleContentFetcher {
+    suspend fun fetch(url: String): Result<ArticleContent>
+}
+
+fun jsoupArticleContentFetcher(): ArticleContentFetcher = JsoupArticleContentFetcher()
+
+private class JsoupArticleContentFetcher : ArticleContentFetcher {
+    override suspend fun fetch(url: String): Result<ArticleContent> = withContext(Dispatchers.IO) {
+        runCatching {
+            val html = fetchHtml(url)
+            parseContent(html, url)
+        }
+    }
+
+    private fun fetchHtml(url: String): String {
+        val connection = URL(url).openConnection() as HttpURLConnection
+        try {
+            connection.connectTimeout = 10_000
+            connection.readTimeout = 30_000
+            val responseCode = connection.responseCode
+            if (responseCode !in 200..299) throw IOException("HTTP $responseCode")
+            return connection.inputStream.bufferedReader().readText()
+        } finally {
+            connection.disconnect()
+        }
+    }
+
+    private fun parseContent(html: String, url: String): ArticleContent {
+        val doc = Jsoup.parse(html, url)
+        val title = doc.title()
+        val contentEl = findContentElement(doc)
+        val paragraphs = contentEl.select("p")
+            .map { it.text() }
+            .filter { it.isNotBlank() }
+        return ArticleContent(title = title, paragraphs = paragraphs)
+    }
+
+    private fun findContentElement(doc: Document): Element =
+        doc.selectFirst("article")
+            ?: doc.selectFirst("[role=main]")
+            ?: doc.selectFirst("main")
+            ?: doc.select("div").maxByOrNull { it.text().length }
+            ?: doc.body()
+}
