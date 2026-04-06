@@ -94,6 +94,22 @@ class ArticleContentFetcherTest {
     }
 
     @Test
+    fun `article element takes priority over role=main`() = runTest {
+        val html = """
+            <html><body>
+                <div role="main"><p>Role main content</p></div>
+                <article><p>Article content</p></article>
+            </body></html>
+        """.trimIndent()
+        server.enqueue(MockResponse().setBody(html).setResponseCode(200))
+
+        val result = jsoupArticleContentFetcher().fetch(server.url("/").toString())
+
+        val content = result.getOrThrow()
+        assertEquals(listOf("Article content"), content.paragraphs)
+    }
+
+    @Test
     fun `extracts title and paragraphs from article element`() = runTest {
         val html = """
             <html><head><title>My Article</title></head>
