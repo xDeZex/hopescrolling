@@ -17,15 +17,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performScrollToIndex
+import com.hopescrolling.data.article.ArticleContent
 import com.hopescrolling.data.article.httpRssFeedFetcher
 import com.hopescrolling.data.feed.FeedSource
 import com.hopescrolling.data.rss.DefaultRssParser
+import com.hopescrolling.ui.screens.ArticleReaderScreen
+import com.hopescrolling.ui.screens.ArticleReaderViewModel
 import com.hopescrolling.ui.screens.FeedManagerScreen
 import com.hopescrolling.ui.screens.FeedManagerViewModel
 import com.hopescrolling.ui.screens.TimelineScreen
 import com.hopescrolling.data.rss.Article
 import com.hopescrolling.ui.screens.TimelineViewModel
 import com.hopescrolling.ui.theme.HopescrollingTheme
+import com.hopescrolling.util.FakeArticleContentFetcher
 import com.hopescrolling.util.FakeArticleRepository
 import com.hopescrolling.util.FakeFeedSourceRepository
 import com.hopescrolling.util.FakeReadStateRepository
@@ -217,6 +221,76 @@ class ScreenshotTest {
         setTimelineContent(viewModel)
         saveScreenshot("timeline_screen_loading")
         assertTrue(File(screenshotsDir, "timeline_screen_loading.png").exists())
+    }
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Test
+    fun screenshot_articleReaderScreen_success() {
+        val content = ArticleContent(
+            title = "Kotlin 2.2 Brings Improved Type Inference",
+            paragraphs = listOf(
+                "The latest Kotlin release ships smarter type inference and faster incremental compilation, making large codebases feel snappier during development.",
+                "Among the most anticipated improvements is context-sensitive overload resolution, which reduces the need for explicit type annotations in common patterns.",
+                "The Kotlin team has also invested in tooling: IDE plugins now surface type-inference hints inline, helping developers understand why a particular overload was chosen.",
+            ),
+        )
+        val viewModel = ArticleReaderViewModel(
+            FakeArticleContentFetcher(Result.success(content)),
+            "https://example.com/article",
+        )
+        composeTestRule.setContent {
+            HopescrollingTheme {
+                Scaffold(
+                    topBar = {
+                        TopAppBar(
+                            title = {},
+                            navigationIcon = {
+                                IconButton(onClick = {}) {
+                                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                                }
+                            },
+                        )
+                    },
+                ) { padding ->
+                    Box(modifier = Modifier.padding(padding)) {
+                        ArticleReaderScreen(viewModel = viewModel)
+                    }
+                }
+            }
+        }
+        saveScreenshot("article_reader_success")
+        assertTrue(File(screenshotsDir, "article_reader_success.png").exists())
+    }
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Test
+    fun screenshot_articleReaderScreen_error() {
+        val viewModel = ArticleReaderViewModel(
+            FakeArticleContentFetcher(Result.failure(RuntimeException("Failed to load article"))),
+            "https://example.com/article",
+        )
+        composeTestRule.setContent {
+            HopescrollingTheme {
+                Scaffold(
+                    topBar = {
+                        TopAppBar(
+                            title = {},
+                            navigationIcon = {
+                                IconButton(onClick = {}) {
+                                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                                }
+                            },
+                        )
+                    },
+                ) { padding ->
+                    Box(modifier = Modifier.padding(padding)) {
+                        ArticleReaderScreen(viewModel = viewModel)
+                    }
+                }
+            }
+        }
+        saveScreenshot("article_reader_error")
+        assertTrue(File(screenshotsDir, "article_reader_error.png").exists())
     }
 
     @Test
