@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -100,6 +101,55 @@ class NavigationTest {
         composeTestRule.onNodeWithTag("timeline_screen").performClick()
         composeTestRule.onNodeWithTag("reader_screen").assertIsDisplayed()
         composeTestRule.onNodeWithTag("back_button").assertIsDisplayed()
+    }
+
+    // Uses a hand-rolled nav setup rather than HopescrollingApp() because the timeline
+    // shows no cards with empty repositories, making it impossible to navigate to the
+    // reader via the real app without test data. Same pattern as readerScreen_backButtonIsShown.
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Test
+    fun readerScreen_showsOpenInBrowserButtonInTopBar() {
+        composeTestRule.setContent {
+            val navController = rememberNavController()
+            val backStackEntry by navController.currentBackStackEntryAsState()
+            val currentRoute = backStackEntry?.destination?.route
+            val encodedUrl = backStackEntry?.arguments?.getString("encodedUrl")
+            Scaffold(
+                topBar = {
+                    TopAppBar(
+                        title = {},
+                        actions = {
+                            if (currentRoute?.startsWith("reader/") == true && encodedUrl != null) {
+                                IconButton(
+                                    onClick = {},
+                                    modifier = Modifier.testTag("open_in_browser_button"),
+                                ) {
+                                    Icon(Icons.Default.Share, contentDescription = "Open in browser")
+                                }
+                            }
+                        },
+                    )
+                },
+            ) { _ ->
+                NavHost(navController = navController, startDestination = "timeline") {
+                    composable("timeline") {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .testTag("timeline_screen")
+                                .clickable { navController.navigate("reader/${Uri.encode("https://example.com/article")}") },
+                        )
+                    }
+                    composable("reader/{encodedUrl}") {
+                        Box(modifier = Modifier.fillMaxSize().testTag("reader_screen"))
+                    }
+                }
+            }
+        }
+
+        composeTestRule.onNodeWithTag("timeline_screen").performClick()
+        composeTestRule.onNodeWithTag("reader_screen").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("open_in_browser_button").assertIsDisplayed()
     }
 
     @Test

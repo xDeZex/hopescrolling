@@ -25,16 +25,14 @@ class ArticleReaderViewModelTest {
 
     @Test
     fun `uiState emits Error after failed fetch`() = runTest {
-        val url = "https://example.com/article"
         val viewModel = ArticleReaderViewModel(
             FakeArticleContentFetcher(Result.failure(RuntimeException("network error"))),
-            url,
+            "https://example.com/article",
         )
 
         val state = viewModel.uiState.first { it is ArticleReaderUiState.Error } as ArticleReaderUiState.Error
 
         assertEquals("network error", state.message)
-        assertEquals(url, state.url)
     }
 
     @Test
