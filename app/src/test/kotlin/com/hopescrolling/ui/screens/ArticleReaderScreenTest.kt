@@ -66,6 +66,38 @@ class ArticleReaderScreenTest {
     }
 
     @Test
+    fun readerScreen_showsLinksAsClickable() {
+        val content = ArticleContent(
+            title = "Article with links",
+            paragraphs = listOf("Para"),
+            links = listOf(
+                com.hopescrolling.data.article.ArticleLink("Reference 1", "https://example.com/ref1"),
+                com.hopescrolling.data.article.ArticleLink("Reference 2", "https://example.com/ref2"),
+            ),
+        )
+        val viewModel = ArticleReaderViewModel(FakeArticleContentFetcher(Result.success(content)), "https://example.com")
+        composeTestRule.setContent { ArticleReaderScreen(viewModel = viewModel) }
+
+        composeTestRule.onNodeWithTag("reader_link_0").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("reader_link_0").assertHasClickAction()
+        composeTestRule.onNodeWithTag("reader_link_1").assertIsDisplayed()
+    }
+
+    @Test
+    fun readerScreen_showsImagesOnSuccess() {
+        val content = ArticleContent(
+            title = "Article with images",
+            paragraphs = listOf("Para"),
+            imageUrls = listOf("https://example.com/photo.jpg", "https://example.com/chart.png"),
+        )
+        val viewModel = ArticleReaderViewModel(FakeArticleContentFetcher(Result.success(content)), "https://example.com")
+        composeTestRule.setContent { ArticleReaderScreen(viewModel = viewModel) }
+
+        composeTestRule.onNodeWithTag("reader_image_0").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("reader_image_1").assertIsDisplayed()
+    }
+
+    @Test
     fun readerScreen_showsTitleAndParagraphsOnSuccess() {
         val content = ArticleContent(title = "Great Article", paragraphs = listOf("First paragraph.", "Second paragraph."))
         val viewModel = ArticleReaderViewModel(FakeArticleContentFetcher(Result.success(content)), "https://example.com")

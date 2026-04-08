@@ -47,7 +47,7 @@ class ArticleReaderViewModelTest {
 
         val state = viewModel.uiState.first { it is ArticleReaderUiState.Success }
 
-        assertEquals(ArticleReaderUiState.Success(content), state)
+        assertEquals(ArticleReaderUiState.Success(content, "https://example.com/article"), state)
     }
 
     @Test
