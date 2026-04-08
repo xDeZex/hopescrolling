@@ -11,8 +11,8 @@ import kotlinx.coroutines.launch
 
 sealed interface ArticleReaderUiState {
     data object Loading : ArticleReaderUiState
-    data class Success(val content: ArticleContent, val url: String) : ArticleReaderUiState
-    data class Error(val message: String, val url: String) : ArticleReaderUiState
+    data class Success(val content: ArticleContent) : ArticleReaderUiState
+    data class Error(val message: String) : ArticleReaderUiState
 }
 
 class ArticleReaderViewModel(
@@ -25,8 +25,8 @@ class ArticleReaderViewModel(
     init {
         viewModelScope.launch {
             _uiState.value = fetcher.fetch(url).fold(
-                onSuccess = { ArticleReaderUiState.Success(it, url) },
-                onFailure = { ArticleReaderUiState.Error(it.message ?: "Failed to load article", url) },
+                onSuccess = { ArticleReaderUiState.Success(it) },
+                onFailure = { ArticleReaderUiState.Error(it.message ?: "Failed to load article") },
             )
         }
     }

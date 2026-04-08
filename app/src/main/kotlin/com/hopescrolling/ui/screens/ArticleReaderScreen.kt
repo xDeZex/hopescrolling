@@ -14,11 +14,10 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -96,12 +95,6 @@ fun ArticleReaderScreen(viewModel: ArticleReaderViewModel) {
                         )
                     }
                 }
-                Button(
-                    onClick = { openInBrowser(context, state.url) },
-                    modifier = Modifier.testTag("reader_open_in_browser"),
-                ) {
-                    Text("Open in browser")
-                }
             }
 
             is ArticleReaderUiState.Error -> Column(
@@ -120,12 +113,6 @@ fun ArticleReaderScreen(viewModel: ArticleReaderViewModel) {
                         .fillMaxWidth()
                         .testTag("reader_error"),
                 )
-                Button(
-                    onClick = { openInBrowser(context, state.url) },
-                    modifier = Modifier.testTag("reader_open_in_browser"),
-                ) {
-                    Text("Open in browser")
-                }
             }
         }
     }

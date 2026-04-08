@@ -37,7 +37,7 @@ class ArticleReaderScreenTest {
     fun tearDown() = Dispatchers.resetMain()
 
     @Test
-    fun readerScreen_showsOpenInBrowserButtonOnError() {
+    fun readerScreen_showsErrorMessage() {
         val viewModel = ArticleReaderViewModel(
             FakeArticleContentFetcher(Result.failure(RuntimeException("connection refused"))),
             "https://example.com/article",
@@ -45,8 +45,6 @@ class ArticleReaderScreenTest {
         composeTestRule.setContent { ArticleReaderScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithTag("reader_error").assertIsDisplayed()
-        composeTestRule.onNodeWithTag("reader_open_in_browser").assertIsDisplayed()
-        composeTestRule.onNodeWithTag("reader_open_in_browser").assertHasClickAction()
     }
 
     @Test
@@ -54,13 +52,15 @@ class ArticleReaderScreenTest {
         val app = ApplicationProvider.getApplicationContext<android.app.Application>()
         Shadows.shadowOf(app).checkActivities(true)
 
-        val viewModel = ArticleReaderViewModel(
-            FakeArticleContentFetcher(Result.failure(RuntimeException("connection refused"))),
-            "https://example.com/article",
+        val content = ArticleContent(
+            title = "Article",
+            paragraphs = listOf("Para"),
+            links = listOf(com.hopescrolling.data.article.ArticleLink("A link", "https://example.com/ref")),
         )
+        val viewModel = ArticleReaderViewModel(FakeArticleContentFetcher(Result.success(content)), "https://example.com")
         composeTestRule.setContent { ArticleReaderScreen(viewModel = viewModel) }
 
-        composeTestRule.onNodeWithTag("reader_open_in_browser").performClick()
+        composeTestRule.onNodeWithTag("reader_link_0").performClick()
 
         assert(ShadowToast.getTextOfLatestToast() == "No browser app found")
     }
