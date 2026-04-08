@@ -3,6 +3,7 @@ package com.hopescrolling.ui.navigation
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -14,6 +15,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.foundation.layout.padding
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.Modifier
+import android.content.ActivityNotFoundException
+import android.content.Intent
 import android.net.Uri
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -41,6 +44,9 @@ fun AppNavigation() {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
+    val readerUrl = if (currentRoute?.startsWith("reader/") == true) {
+        backStackEntry?.arguments?.getString("encodedUrl")?.let { Uri.decode(it) }
+    } else null
 
     Scaffold(
         topBar = {
@@ -57,6 +63,20 @@ fun AppNavigation() {
                     }
                 },
                 actions = {
+                    if (readerUrl != null) {
+                        IconButton(
+                            onClick = {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(readerUrl))
+                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                try {
+                                    context.startActivity(intent)
+                                } catch (_: ActivityNotFoundException) {}
+                            },
+                            modifier = Modifier.testTag("open_in_browser_button"),
+                        ) {
+                            Icon(Icons.Default.Share, contentDescription = "Open in browser")
+                        }
+                    }
                     if (currentRoute == ROUTE_TIMELINE) {
                         IconButton(
                             onClick = { navController.navigate(ROUTE_FEED_MANAGER) },

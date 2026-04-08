@@ -110,6 +110,42 @@ class ArticleContentFetcherTest {
     }
 
     @Test
+    fun `extracts standalone links not inside paragraphs`() = runTest {
+        val html = """
+            <html><head><title>Article</title></head>
+            <body><article>
+                <p>See <a href="https://example.com/inline">inline link</a> in this paragraph.</p>
+                <a href="https://example.com/standalone1">Standalone Link 1</a>
+                <a href="https://example.com/standalone2">Standalone Link 2</a>
+            </article></body></html>
+        """.trimIndent()
+        server.enqueue(MockResponse().setBody(html).setResponseCode(200))
+
+        val content = jsoupArticleContentFetcher().fetch(server.url("/").toString()).getOrThrow()
+
+        // Inline links (inside <p>) are excluded to avoid duplicating paragraph text
+        assertEquals(listOf("Standalone Link 1" to "https://example.com/standalone1", "Standalone Link 2" to "https://example.com/standalone2"), content.links.map { it.text to it.url })
+    }
+
+    @Test
+    fun `extracts image URLs from article element`() = runTest {
+        val html = """
+            <html><head><title>My Article</title></head>
+            <body><article>
+                <p>First para</p>
+                <img src="https://example.com/photo.jpg" alt="A photo"/>
+                <p>Second para</p>
+                <img src="https://example.com/chart.png" alt="A chart"/>
+            </article></body></html>
+        """.trimIndent()
+        server.enqueue(MockResponse().setBody(html).setResponseCode(200))
+
+        val content = jsoupArticleContentFetcher().fetch(server.url("/").toString()).getOrThrow()
+
+        assertEquals(listOf("https://example.com/photo.jpg", "https://example.com/chart.png"), content.imageUrls)
+    }
+
+    @Test
     fun `extracts title and paragraphs from article element`() = runTest {
         val html = """
             <html><head><title>My Article</title></head>

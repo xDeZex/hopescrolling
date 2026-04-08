@@ -37,7 +37,7 @@ class ArticleReaderScreenTest {
     fun tearDown() = Dispatchers.resetMain()
 
     @Test
-    fun readerScreen_showsOpenInBrowserButtonOnError() {
+    fun readerScreen_showsErrorMessage() {
         val viewModel = ArticleReaderViewModel(
             FakeArticleContentFetcher(Result.failure(RuntimeException("connection refused"))),
             "https://example.com/article",
@@ -45,8 +45,6 @@ class ArticleReaderScreenTest {
         composeTestRule.setContent { ArticleReaderScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithTag("reader_error").assertIsDisplayed()
-        composeTestRule.onNodeWithTag("reader_open_in_browser").assertIsDisplayed()
-        composeTestRule.onNodeWithTag("reader_open_in_browser").assertHasClickAction()
     }
 
     @Test
@@ -54,15 +52,49 @@ class ArticleReaderScreenTest {
         val app = ApplicationProvider.getApplicationContext<android.app.Application>()
         Shadows.shadowOf(app).checkActivities(true)
 
-        val viewModel = ArticleReaderViewModel(
-            FakeArticleContentFetcher(Result.failure(RuntimeException("connection refused"))),
-            "https://example.com/article",
+        val content = ArticleContent(
+            title = "Article",
+            paragraphs = listOf("Para"),
+            links = listOf(com.hopescrolling.data.article.ArticleLink("A link", "https://example.com/ref")),
         )
+        val viewModel = ArticleReaderViewModel(FakeArticleContentFetcher(Result.success(content)), "https://example.com")
         composeTestRule.setContent { ArticleReaderScreen(viewModel = viewModel) }
 
-        composeTestRule.onNodeWithTag("reader_open_in_browser").performClick()
+        composeTestRule.onNodeWithTag("reader_link_0").performClick()
 
         assert(ShadowToast.getTextOfLatestToast() == "No browser app found")
+    }
+
+    @Test
+    fun readerScreen_showsLinksAsClickable() {
+        val content = ArticleContent(
+            title = "Article with links",
+            paragraphs = listOf("Para"),
+            links = listOf(
+                com.hopescrolling.data.article.ArticleLink("Reference 1", "https://example.com/ref1"),
+                com.hopescrolling.data.article.ArticleLink("Reference 2", "https://example.com/ref2"),
+            ),
+        )
+        val viewModel = ArticleReaderViewModel(FakeArticleContentFetcher(Result.success(content)), "https://example.com")
+        composeTestRule.setContent { ArticleReaderScreen(viewModel = viewModel) }
+
+        composeTestRule.onNodeWithTag("reader_link_0").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("reader_link_0").assertHasClickAction()
+        composeTestRule.onNodeWithTag("reader_link_1").assertIsDisplayed()
+    }
+
+    @Test
+    fun readerScreen_showsImagesOnSuccess() {
+        val content = ArticleContent(
+            title = "Article with images",
+            paragraphs = listOf("Para"),
+            imageUrls = listOf("https://example.com/photo.jpg", "https://example.com/chart.png"),
+        )
+        val viewModel = ArticleReaderViewModel(FakeArticleContentFetcher(Result.success(content)), "https://example.com")
+        composeTestRule.setContent { ArticleReaderScreen(viewModel = viewModel) }
+
+        composeTestRule.onNodeWithTag("reader_image_0").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("reader_image_1").assertIsDisplayed()
     }
 
     @Test
