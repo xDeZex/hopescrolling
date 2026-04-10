@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.UUID
 
-class FeedManagerViewModel(
+class SettingsViewModel(
     private val repository: FeedSourceRepository,
 ) : ViewModel() {
     val feedSources: StateFlow<List<FeedSource>> = repository.getAll()
