@@ -10,7 +10,6 @@ import androidx.test.core.app.ApplicationProvider
 import com.hopescrolling.data.article.ArticleContent
 import com.hopescrolling.util.FakeArticleContentFetcher
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
@@ -111,9 +110,7 @@ class ArticleReaderScreenTest {
 
     @Test
     fun readerScreen_showsLoadingIndicatorWhileLoading() {
-        val dispatcher = StandardTestDispatcher()
-        Dispatchers.setMain(dispatcher)
-        val viewModel = ArticleReaderViewModel(FakeArticleContentFetcher(), "https://example.com")
+        val viewModel = ArticleReaderViewModel(FakeArticleContentFetcher(result = null), "https://example.com")
         composeTestRule.setContent { ArticleReaderScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithTag("reader_loading").assertIsDisplayed()
