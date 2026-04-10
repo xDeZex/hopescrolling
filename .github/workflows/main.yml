@@ -25,15 +25,11 @@ jobs:
       - name: Build debug APK
         run: ./gradlew assembleDebug
 
-      - name: Compute short SHA
-        id: sha
-        run: echo "short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
-
       - name: Publish versioned release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: release-${{ steps.sha.outputs.short }}
-          name: release-${{ steps.sha.outputs.short }}
+          tag_name: build-${{ github.run_number }}
+          name: build-${{ github.run_number }}
           make_latest: true
           files: app/build/outputs/apk/debug/app-debug.apk
 
