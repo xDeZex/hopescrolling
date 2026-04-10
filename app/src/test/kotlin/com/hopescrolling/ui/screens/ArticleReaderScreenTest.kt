@@ -7,6 +7,11 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import coil.Coil
+import coil.ImageLoader
+import coil.test.FakeImageLoaderEngine
 import com.hopescrolling.data.article.ArticleContent
 import com.hopescrolling.util.FakeArticleContentFetcher
 import kotlinx.coroutines.Dispatchers
@@ -22,7 +27,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
 import org.robolectric.shadows.ShadowToast
 
-@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class, coil.annotation.ExperimentalCoilApi::class)
 @RunWith(RobolectricTestRunner::class)
 class ArticleReaderScreenTest {
 
@@ -30,10 +35,20 @@ class ArticleReaderScreenTest {
     val composeTestRule = createComposeRule()
 
     @Before
-    fun setUp() = Dispatchers.setMain(UnconfinedTestDispatcher())
+    fun setUp() {
+        Dispatchers.setMain(UnconfinedTestDispatcher())
+        val context = ApplicationProvider.getApplicationContext<android.app.Application>()
+        val engine = FakeImageLoaderEngine.Builder()
+            .default(ColorDrawable(Color.TRANSPARENT))
+            .build()
+        Coil.setImageLoader(ImageLoader.Builder(context).components { add(engine) }.build())
+    }
 
     @After
-    fun tearDown() = Dispatchers.resetMain()
+    fun tearDown() {
+        Dispatchers.resetMain()
+        Coil.reset()
+    }
 
     @Test
     fun readerScreen_showsErrorMessage() {
