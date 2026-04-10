@@ -41,10 +41,10 @@ class NavigationTest {
     }
 
     @Test
-    fun manageFeedsButton_navigatesToFeedManager() {
+    fun manageFeedsButton_navigatesToSettings() {
         composeTestRule.setContent { HopescrollingApp() }
         composeTestRule.onNodeWithTag("manage_feeds_button").performClick()
-        composeTestRule.onNodeWithTag("feed_manager_screen").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("settings_screen").assertIsDisplayed()
     }
 
     // Verifies that the back button is shown when navigating to the reader screen.
@@ -153,10 +153,10 @@ class NavigationTest {
     }
 
     @Test
-    fun backFromFeedManager_returnsToTimeline() {
+    fun backFromSettings_returnsToTimeline() {
         composeTestRule.setContent { HopescrollingApp() }
         composeTestRule.onNodeWithTag("manage_feeds_button").performClick()
-        composeTestRule.onNodeWithTag("feed_manager_screen").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("settings_screen").assertIsDisplayed()
         composeTestRule.onNodeWithTag("back_button").performClick()
         composeTestRule.onNodeWithTag("timeline_screen").assertIsDisplayed()
     }

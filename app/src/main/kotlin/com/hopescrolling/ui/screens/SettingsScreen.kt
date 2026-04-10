@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.hopescrolling.data.feed.FeedSource
 
 @Composable
-fun FeedManagerScreen(viewModel: FeedManagerViewModel) {
+fun SettingsScreen(viewModel: SettingsViewModel) {
     val feedSources by viewModel.feedSources.collectAsState()
     var addUrl by remember { mutableStateOf("") }
     var renameState by remember { mutableStateOf<Pair<FeedSource, String>?>(null) }
@@ -34,7 +34,7 @@ fun FeedManagerScreen(viewModel: FeedManagerViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .testTag("feed_manager_screen")
+            .testTag("settings_screen")
             .padding(16.dp),
     ) {
         Row(

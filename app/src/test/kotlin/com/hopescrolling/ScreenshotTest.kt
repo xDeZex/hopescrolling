@@ -24,8 +24,8 @@ import com.hopescrolling.data.feed.FeedSource
 import com.hopescrolling.data.rss.DefaultRssParser
 import com.hopescrolling.ui.screens.ArticleReaderScreen
 import com.hopescrolling.ui.screens.ArticleReaderViewModel
-import com.hopescrolling.ui.screens.FeedManagerScreen
-import com.hopescrolling.ui.screens.FeedManagerViewModel
+import com.hopescrolling.ui.screens.SettingsScreen
+import com.hopescrolling.ui.screens.SettingsViewModel
 import com.hopescrolling.ui.screens.TimelineScreen
 import com.hopescrolling.data.rss.Article
 import com.hopescrolling.ui.screens.TimelineViewModel
@@ -118,7 +118,7 @@ class ScreenshotTest {
     }
 
     @OptIn(ExperimentalMaterial3Api::class)
-    private fun setFeedManagerContent(viewModel: FeedManagerViewModel) {
+    private fun setSettingsContent(viewModel: SettingsViewModel) {
         composeTestRule.setContent {
             HopescrollingTheme {
                 Scaffold(
@@ -134,7 +134,7 @@ class ScreenshotTest {
                     },
                 ) { padding ->
                     Box(modifier = Modifier.padding(padding)) {
-                        FeedManagerScreen(viewModel = viewModel)
+                        SettingsScreen(viewModel = viewModel)
                     }
                 }
             }
@@ -300,23 +300,23 @@ class ScreenshotTest {
     }
 
     @Test
-    fun screenshot_feedManagerScreen_empty() {
-        val viewModel = FeedManagerViewModel(FakeFeedSourceRepository())
-        setFeedManagerContent(viewModel)
-        saveScreenshot("feed_manager_empty")
-        assertTrue(File(screenshotsDir, "feed_manager_empty.png").exists())
+    fun screenshot_settingsScreen_empty() {
+        val viewModel = SettingsViewModel(FakeFeedSourceRepository())
+        setSettingsContent(viewModel)
+        saveScreenshot("settings_screen_empty")
+        assertTrue(File(screenshotsDir, "settings_screen_empty.png").exists())
     }
 
     @Test
-    fun screenshot_feedManagerScreen_withFeeds() {
+    fun screenshot_settingsScreen_withFeeds() {
         val repo = FakeFeedSourceRepository()
         repo.sources.value = listOf(
             FeedSource(id = "1", name = "Tech Blog", url = "https://tech.example.com/feed"),
             FeedSource(id = "2", name = "News Feed", url = "https://news.example.com/feed"),
         )
-        val viewModel = FeedManagerViewModel(repo)
-        setFeedManagerContent(viewModel)
-        saveScreenshot("feed_manager_with_feeds")
-        assertTrue(File(screenshotsDir, "feed_manager_with_feeds.png").exists())
+        val viewModel = SettingsViewModel(repo)
+        setSettingsContent(viewModel)
+        saveScreenshot("settings_screen_with_feeds")
+        assertTrue(File(screenshotsDir, "settings_screen_with_feeds.png").exists())
     }
 }

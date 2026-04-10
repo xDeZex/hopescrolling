@@ -42,9 +42,9 @@ Single-module Android app (`com.hopescrolling`), Kotlin + Jetpack Compose, MVVM.
 
 **Entry point**: `MainActivity` → `HopescrollingApp()` → `HopescrollingTheme` → `AppNavigation()`
 
-**Navigation** (`ui/navigation/AppNavigation.kt`): Two routes managed by a single `NavHost` inside a `Scaffold`. The top bar conditionally shows a settings icon (on Timeline) or a back arrow (on Feed Manager) based on the current back-stack route.
+**Navigation** (`ui/navigation/AppNavigation.kt`): Two routes managed by a single `NavHost` inside a `Scaffold`. The top bar conditionally shows a settings icon (on Timeline) or a back arrow (on Settings) based on the current back-stack route.
 
-**Screens** (`ui/screens/`): `TimelineScreen` and `FeedManagerScreen` are currently placeholders. Future work adds ViewModels and content per the issues below.
+**Screens** (`ui/screens/`): `TimelineScreen` and `SettingsScreen` are currently placeholders. Future work adds ViewModels and content per the issues below.
 
 **Theme** (`ui/theme/`): Single OLED dark theme only — `#000000` background (`OledBlack`), no light mode, no dynamic color. All palette values live in `Color.kt`; `Theme.kt` assembles them into a `darkColorScheme`.
 
@@ -55,7 +55,7 @@ Single-module Android app (`com.hopescrolling`), Kotlin + Jetpack Compose, MVVM.
 See GitHub issues for implementation order:
 - **#4** `RssParser` — HTTP fetch + RSS 2.0 / Atom XML parsing → article data objects
 - **#5** `FeedSourceRepository` — DataStore-backed CRUD for feed source URLs/names
-- **#6** `FeedManagerScreen` + `FeedManagerViewModel` — wired to FeedSourceRepository
+- **#6** `SettingsScreen` + `SettingsViewModel` — wired to FeedSourceRepository
 - **#7** `ArticleRepository` — parallel fetch, merge, sort, deduplicate via RssParser + FeedSourceRepository
 - **#8** `TimelineScreen` + `TimelineViewModel` + `ArticleCard` — full article list with loading/error states
 - **#9** `ReadStateRepository` — Room DB tracking read article IDs, wired into TimelineViewModel

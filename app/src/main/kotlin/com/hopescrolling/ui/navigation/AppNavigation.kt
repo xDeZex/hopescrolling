@@ -27,13 +27,13 @@ import androidx.navigation.compose.rememberNavController
 import com.hopescrolling.AppContainer
 import com.hopescrolling.ui.screens.ArticleReaderScreen
 import com.hopescrolling.ui.screens.ArticleReaderViewModel
-import com.hopescrolling.ui.screens.FeedManagerScreen
-import com.hopescrolling.ui.screens.FeedManagerViewModel
+import com.hopescrolling.ui.screens.SettingsScreen
+import com.hopescrolling.ui.screens.SettingsViewModel
 import com.hopescrolling.ui.screens.TimelineScreen
 import com.hopescrolling.ui.screens.TimelineViewModel
 
 private const val ROUTE_TIMELINE = "timeline"
-private const val ROUTE_FEED_MANAGER = "feed_manager"
+private const val ROUTE_SETTINGS = "settings"
 private const val ROUTE_READER = "reader/{encodedUrl}"
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -53,7 +53,7 @@ fun AppNavigation() {
             TopAppBar(
                 title = {},
                 navigationIcon = {
-                    if (currentRoute == ROUTE_FEED_MANAGER || currentRoute?.startsWith("reader/") == true) {
+                    if (currentRoute == ROUTE_SETTINGS || currentRoute?.startsWith("reader/") == true) {
                         IconButton(
                             onClick = { navController.popBackStack() },
                             modifier = Modifier.testTag("back_button"),
@@ -79,7 +79,7 @@ fun AppNavigation() {
                     }
                     if (currentRoute == ROUTE_TIMELINE) {
                         IconButton(
-                            onClick = { navController.navigate(ROUTE_FEED_MANAGER) },
+                            onClick = { navController.navigate(ROUTE_SETTINGS) },
                             modifier = Modifier.testTag("manage_feeds_button"),
                         ) {
                             Icon(Icons.Default.Settings, contentDescription = "Manage feeds")
@@ -100,9 +100,9 @@ fun AppNavigation() {
                     navController.navigate("reader/${Uri.encode(url)}")
                 })
             }
-            composable(ROUTE_FEED_MANAGER) {
-                val viewModel = viewModel { FeedManagerViewModel(container.feedSourceRepository) }
-                FeedManagerScreen(viewModel)
+            composable(ROUTE_SETTINGS) {
+                val viewModel = viewModel { SettingsViewModel(container.feedSourceRepository) }
+                SettingsScreen(viewModel)
             }
             composable(ROUTE_READER) { backStackEntry ->
                 val encodedUrl = backStackEntry.arguments?.getString("encodedUrl") ?: return@composable
