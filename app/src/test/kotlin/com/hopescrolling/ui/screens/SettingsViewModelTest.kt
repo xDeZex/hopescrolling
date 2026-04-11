@@ -57,6 +57,19 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun `addFeed prepends https when url has no scheme`() = runTest {
+        val repo = FakeFeedSourceRepository()
+        val viewModel = SettingsViewModel(repo)
+
+        viewModel.addFeed("example.com/feed")
+
+        val sources = viewModel.feedSources.first()
+        assertEquals(1, sources.size)
+        assertEquals("https://example.com/feed", sources[0].url)
+        assertEquals("https://example.com/feed", sources[0].name)
+    }
+
+    @Test
     fun `renameFeed updates the name of the source with the given id`() = runTest {
         val repo = FakeFeedSourceRepository()
         val source = FeedSource(id = "1", name = "Old Name", url = "https://example.com/feed")

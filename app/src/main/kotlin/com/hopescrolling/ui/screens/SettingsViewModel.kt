@@ -18,7 +18,8 @@ class SettingsViewModel(
 
     fun addFeed(url: String) {
         viewModelScope.launch {
-            repository.add(FeedSource(id = UUID.randomUUID().toString(), name = url, url = url))
+            val normalizedUrl = if (url.startsWith("http://") || url.startsWith("https://")) url else "https://$url"
+            repository.add(FeedSource(id = UUID.randomUUID().toString(), name = normalizedUrl, url = normalizedUrl))
         }
     }
 
