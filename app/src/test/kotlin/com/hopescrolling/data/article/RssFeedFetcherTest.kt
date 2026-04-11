@@ -50,9 +50,47 @@ class RssFeedFetcherTest {
     }
 
     @Test
-    fun `malformed URL throws before making network call`() {
+    fun `malformed url throws IOException`() {
         val fetcher = httpRssFeedFetcher()
-        assertThrows(Exception::class.java) { runBlocking { fetcher.fetch("not-a-url") } }
+        assertThrows(IOException::class.java) { runBlocking { fetcher.fetch("not-a-url") } }
+    }
+
+    @Test
+    fun `301 redirect is followed to new url`() = runTest {
+        val finalUrl = server.url("/final").toString()
+        server.enqueue(MockResponse().setResponseCode(301).addHeader("Location", finalUrl))
+        server.enqueue(MockResponse().setBody("<rss/>").setResponseCode(200))
+        val fetcher = httpRssFeedFetcher()
+        val result = fetcher.fetch(server.url("/original").toString())
+        assertEquals("<rss/>", result)
+    }
+
+    @Test
+    fun `302 redirect is followed to new url`() = runTest {
+        val finalUrl = server.url("/final").toString()
+        server.enqueue(MockResponse().setResponseCode(302).addHeader("Location", finalUrl))
+        server.enqueue(MockResponse().setBody("<rss/>").setResponseCode(200))
+        val fetcher = httpRssFeedFetcher()
+        val result = fetcher.fetch(server.url("/original").toString())
+        assertEquals("<rss/>", result)
+    }
+
+    @Test
+    fun `too many redirects throws IOException`() {
+        val url = server.url("/feed").toString()
+        repeat(5) { server.enqueue(MockResponse().setResponseCode(301).addHeader("Location", url)) }
+        val fetcher = httpRssFeedFetcher()
+        val ex = assertThrows(IOException::class.java) { runBlocking { fetcher.fetch(url) } }
+        assert(ex.message!!.contains("Too many redirects")) { "Expected 'Too many redirects' in: ${ex.message}" }
+    }
+
+    @Test
+    fun `relative Location header is resolved against base url`() = runTest {
+        server.enqueue(MockResponse().setResponseCode(301).addHeader("Location", "/final"))
+        server.enqueue(MockResponse().setBody("<rss/>").setResponseCode(200))
+        val fetcher = httpRssFeedFetcher()
+        val result = fetcher.fetch(server.url("/original").toString())
+        assertEquals("<rss/>", result)
     }
 
     @Test

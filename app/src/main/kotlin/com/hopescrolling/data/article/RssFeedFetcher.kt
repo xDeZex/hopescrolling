@@ -12,17 +12,28 @@ fun interface RssFeedFetcher {
 
 fun httpRssFeedFetcher(): RssFeedFetcher = RssFeedFetcher { url ->
     withContext(Dispatchers.IO) {
-        val connection = URL(url).openConnection() as HttpURLConnection
-        try {
-            connection.connectTimeout = 10_000
-            connection.readTimeout = 30_000
-            val responseCode = connection.responseCode
-            if (responseCode !in 200..299) {
-                throw IOException("HTTP $responseCode for $url")
+        fetchFollowingRedirects(url, remainingRedirects = 5)
+    }
+}
+
+private fun fetchFollowingRedirects(url: String, remainingRedirects: Int): String {
+    if (remainingRedirects <= 0) throw IOException("Too many redirects for $url")
+    val connection = URL(url).openConnection() as HttpURLConnection
+    connection.instanceFollowRedirects = false
+    connection.connectTimeout = 10_000
+    connection.readTimeout = 30_000
+    return try {
+        val responseCode = connection.responseCode
+        when {
+            responseCode in 300..399 -> {
+                val location = connection.getHeaderField("Location")
+                    ?: throw IOException("Redirect with no Location header for $url")
+                fetchFollowingRedirects(URL(URL(url), location).toString(), remainingRedirects - 1)
             }
-            connection.inputStream.bufferedReader().readText()
-        } finally {
-            connection.disconnect()
+            responseCode !in 200..299 -> throw IOException("HTTP $responseCode for $url")
+            else -> connection.inputStream.bufferedReader().readText()
         }
+    } finally {
+        connection.disconnect()
     }
 }
