@@ -14,6 +14,8 @@ import com.hopescrolling.data.feed.feedSourceDataStore
 import com.hopescrolling.data.readstate.AppDatabase
 import com.hopescrolling.data.readstate.ReadStateRepository
 import com.hopescrolling.data.readstate.RoomReadStateRepository
+import com.hopescrolling.data.update.AppUpdateRepository
+import com.hopescrolling.data.update.HttpAppUpdateRepository
 
 class AppContainer(context: Context) {
     val feedSourceRepository: FeedSourceRepository by lazy {
@@ -40,5 +42,17 @@ class AppContainer(context: Context) {
 
     val articleContentFetcher: ArticleContentFetcher by lazy {
         jsoupArticleContentFetcher()
+    }
+
+    val appUpdateRepository: AppUpdateRepository by lazy {
+        HttpAppUpdateRepository(
+            apiUrl = GITHUB_RELEASES_API_URL,
+            currentVersionCode = BuildConfig.VERSION_CODE,
+        )
+    }
+
+    companion object {
+        const val GITHUB_RELEASES_API_URL =
+            "https://api.github.com/repos/xDeZex/hopescrolling/releases"
     }
 }
