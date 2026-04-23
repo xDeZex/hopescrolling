@@ -48,7 +48,7 @@ class PubDateFormatterTest {
 
     @Test
     fun formatPubDate_epoch_returnsNull() {
-        // Epoch signals a parse failure — should return null
-        assertNull(formatPubDate("garbage", now))
+        // A date string that parses to Instant.EPOCH triggers the sentinel check → null
+        assertNull(formatPubDate("Thu, 01 Jan 1970 00:00:00 GMT", now))
     }
 }
