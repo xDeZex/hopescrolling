@@ -142,4 +142,24 @@ class SettingsScreenTest {
 
         composeTestRule.onNodeWithTag("update_error").assertIsDisplayed()
     }
+
+    @Test
+    fun settingsScreen_showsDownloadButtonWhenUpdateAvailable() {
+        val state = UpdateState.UpdateAvailable(latestLabel = "Build 42", apkUrl = "https://example.com/app.apk")
+        val viewModel = SettingsViewModel(FakeFeedSourceRepository(), FakeAppUpdateRepository(state))
+        composeTestRule.setContent { SettingsScreen(viewModel = viewModel) }
+
+        composeTestRule.onNodeWithTag("update_download_button").assertIsDisplayed()
+    }
+
+    @Test
+    fun settingsScreen_downloadButtonDisabledAfterClick() {
+        val state = UpdateState.UpdateAvailable(latestLabel = "Build 42", apkUrl = "https://example.com/app.apk")
+        val viewModel = SettingsViewModel(FakeFeedSourceRepository(), FakeAppUpdateRepository(state))
+        composeTestRule.setContent { SettingsScreen(viewModel = viewModel, onDownloadUpdate = {}) }
+
+        composeTestRule.onNodeWithTag("update_download_button").performClick()
+
+        composeTestRule.onNodeWithText("Downloading...").assertIsDisplayed()
+    }
 }
