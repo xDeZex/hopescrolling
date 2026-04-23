@@ -23,6 +23,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.hopescrolling.ui.navigation.AppNavigation
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -159,5 +161,19 @@ class NavigationTest {
         composeTestRule.onNodeWithTag("settings_screen").assertIsDisplayed()
         composeTestRule.onNodeWithTag("back_button").performClick()
         composeTestRule.onNodeWithTag("timeline_screen").assertIsDisplayed()
+    }
+
+    @Test
+    fun timelineScreen_showsBadgeDotWhenUpdateAvailable() {
+        composeTestRule.setContent { AppNavigation(updateAvailable = MutableStateFlow(true)) }
+
+        composeTestRule.onNodeWithTag("update_badge_dot").assertIsDisplayed()
+    }
+
+    @Test
+    fun timelineScreen_hidesBadgeDotWhenNoUpdateAvailable() {
+        composeTestRule.setContent { AppNavigation(updateAvailable = MutableStateFlow(false)) }
+
+        composeTestRule.onNodeWithTag("update_badge_dot").assertDoesNotExist()
     }
 }
