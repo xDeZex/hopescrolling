@@ -16,6 +16,13 @@ import com.hopescrolling.data.readstate.ReadStateRepository
 import com.hopescrolling.data.readstate.RoomReadStateRepository
 import com.hopescrolling.data.update.AppUpdateRepository
 import com.hopescrolling.data.update.HttpAppUpdateRepository
+import com.hopescrolling.data.update.UpdateState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 class AppContainer(context: Context) {
     val feedSourceRepository: FeedSourceRepository by lazy {
@@ -49,6 +56,15 @@ class AppContainer(context: Context) {
             apiUrl = GITHUB_RELEASES_API_URL,
             currentVersionCode = BuildConfig.VERSION_CODE,
         )
+    }
+
+    private val _updateAvailable = MutableStateFlow(false)
+    val updateAvailable: StateFlow<Boolean> = _updateAvailable
+
+    init {
+        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+            _updateAvailable.value = appUpdateRepository.getUpdateState() is UpdateState.UpdateAvailable
+        }
     }
 
     companion object {
