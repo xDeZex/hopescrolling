@@ -10,6 +10,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.foundation.layout.padding
@@ -18,8 +19,15 @@ import androidx.compose.ui.Modifier
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.flow.StateFlow
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -38,7 +46,7 @@ private const val ROUTE_READER = "reader/{encodedUrl}"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppNavigation() {
+fun AppNavigation(updateAvailable: StateFlow<Boolean>? = null) {
     val context = LocalContext.current
     val container = remember { AppContainer(context) }
     val navController = rememberNavController()
@@ -47,6 +55,7 @@ fun AppNavigation() {
     val readerUrl = if (currentRoute?.startsWith("reader/") == true) {
         backStackEntry?.arguments?.getString("encodedUrl")?.let { Uri.decode(it) }
     } else null
+    val badgeVisible by (updateAvailable ?: container.updateAvailable).collectAsState()
 
     Scaffold(
         topBar = {
@@ -78,11 +87,25 @@ fun AppNavigation() {
                         }
                     }
                     if (currentRoute == ROUTE_TIMELINE) {
-                        IconButton(
-                            onClick = { navController.navigate(ROUTE_SETTINGS) },
-                            modifier = Modifier.testTag("manage_feeds_button"),
-                        ) {
-                            Icon(Icons.Default.Settings, contentDescription = "Manage feeds")
+                        Box {
+                            IconButton(
+                                onClick = { navController.navigate(ROUTE_SETTINGS) },
+                                modifier = Modifier.testTag("manage_feeds_button"),
+                            ) {
+                                Icon(Icons.Default.Settings, contentDescription = "Manage feeds")
+                            }
+                            if (badgeVisible) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .background(
+                                            color = MaterialTheme.colorScheme.error,
+                                            shape = CircleShape,
+                                        )
+                                        .align(androidx.compose.ui.Alignment.TopEnd)
+                                        .testTag("update_badge_dot"),
+                                )
+                            }
                         }
                     }
                 },
