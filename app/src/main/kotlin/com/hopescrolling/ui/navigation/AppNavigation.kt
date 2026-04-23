@@ -125,7 +125,16 @@ fun AppNavigation(updateAvailable: StateFlow<Boolean>? = null) {
             }
             composable(ROUTE_SETTINGS) {
                 val viewModel = viewModel { SettingsViewModel(container.feedSourceRepository, container.appUpdateRepository) }
-                SettingsScreen(viewModel)
+                SettingsScreen(viewModel, onDownloadUpdate = { apkUrl ->
+                    val dm = context.getSystemService(android.app.DownloadManager::class.java)
+                    val request = android.app.DownloadManager.Request(Uri.parse(apkUrl))
+                        .setDestinationInExternalPublicDir(
+                            android.os.Environment.DIRECTORY_DOWNLOADS,
+                            "hopescrolling-update.apk",
+                        )
+                        .setNotificationVisibility(android.app.DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                    dm?.enqueue(request)
+                })
             }
             composable(ROUTE_READER) { backStackEntry ->
                 val encodedUrl = backStackEntry.arguments?.getString("encodedUrl") ?: return@composable

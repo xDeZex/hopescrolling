@@ -29,9 +29,13 @@ import com.hopescrolling.data.feed.FeedSource
 import com.hopescrolling.data.update.UpdateState
 
 @Composable
-fun SettingsScreen(viewModel: SettingsViewModel) {
+fun SettingsScreen(
+    viewModel: SettingsViewModel,
+    onDownloadUpdate: (String) -> Unit = {},
+) {
     val feedSources by viewModel.feedSources.collectAsState()
     val updateState by viewModel.updateState.collectAsState()
+    val isDownloading by viewModel.isDownloading.collectAsState()
     var addUrl by remember { mutableStateOf("") }
     var renameState by remember { mutableStateOf<Pair<FeedSource, String>?>(null) }
 
@@ -41,7 +45,14 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             .testTag("settings_screen")
             .padding(16.dp),
     ) {
-        AppUpdateSection(updateState)
+        AppUpdateSection(
+            state = updateState,
+            isDownloading = isDownloading,
+            onDownload = { apkUrl ->
+                viewModel.startDownload()
+                onDownloadUpdate(apkUrl)
+            },
+        )
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -132,7 +143,11 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
 }
 
 @Composable
-private fun AppUpdateSection(state: UpdateState) {
+private fun AppUpdateSection(
+    state: UpdateState,
+    isDownloading: Boolean = false,
+    onDownload: (String) -> Unit = {},
+) {
     when (state) {
         UpdateState.Loading -> CircularProgressIndicator(modifier = Modifier.testTag("update_loading"))
         UpdateState.UpToDate -> Text(
@@ -148,6 +163,13 @@ private fun AppUpdateSection(state: UpdateState) {
                 text = "Latest: ${state.latestLabel}",
                 modifier = Modifier.testTag("update_latest_version"),
             )
+            Button(
+                onClick = { onDownload(state.apkUrl) },
+                enabled = !isDownloading,
+                modifier = Modifier.testTag("update_download_button"),
+            ) {
+                Text(if (isDownloading) "Downloading..." else "Download Update")
+            }
         }
         UpdateState.Error -> Text(
             text = "Could not check for updates",

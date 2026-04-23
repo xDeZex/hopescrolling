@@ -122,4 +122,20 @@ class SettingsViewModelTest {
 
         assertEquals(UpdateState.Error, state)
     }
+
+    @Test
+    fun `isDownloading is false initially`() = runTest {
+        val viewModel = SettingsViewModel(FakeFeedSourceRepository(), FakeAppUpdateRepository())
+
+        assertEquals(false, viewModel.isDownloading.value)
+    }
+
+    @Test
+    fun `startDownload sets isDownloading to true`() = runTest {
+        val viewModel = SettingsViewModel(FakeFeedSourceRepository(), FakeAppUpdateRepository())
+
+        viewModel.startDownload()
+
+        assertEquals(true, viewModel.isDownloading.value)
+    }
 }

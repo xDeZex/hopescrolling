@@ -24,10 +24,17 @@ class SettingsViewModel(
     private val _updateState = MutableStateFlow<UpdateState>(UpdateState.Loading)
     val updateState: StateFlow<UpdateState> = _updateState.asStateFlow()
 
+    private val _isDownloading = MutableStateFlow(false)
+    val isDownloading: StateFlow<Boolean> = _isDownloading.asStateFlow()
+
     init {
         viewModelScope.launch {
             _updateState.value = appUpdateRepository.getUpdateState()
         }
+    }
+
+    fun startDownload() {
+        _isDownloading.value = true
     }
 
     fun addFeed(url: String) {
