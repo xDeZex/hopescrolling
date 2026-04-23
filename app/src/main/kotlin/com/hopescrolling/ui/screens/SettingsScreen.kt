@@ -9,6 +9,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -24,10 +26,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.hopescrolling.data.feed.FeedSource
+import com.hopescrolling.data.update.UpdateState
 
 @Composable
 fun SettingsScreen(viewModel: SettingsViewModel) {
     val feedSources by viewModel.feedSources.collectAsState()
+    val updateState by viewModel.updateState.collectAsState()
     var addUrl by remember { mutableStateOf("") }
     var renameState by remember { mutableStateOf<Pair<FeedSource, String>?>(null) }
 
@@ -37,6 +41,8 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             .testTag("settings_screen")
             .padding(16.dp),
     ) {
+        AppUpdateSection(updateState)
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -121,6 +127,31 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             dismissButton = {
                 TextButton(onClick = { renameState = null }) { Text("Cancel") }
             },
+        )
+    }
+}
+
+@Composable
+private fun AppUpdateSection(state: UpdateState) {
+    when (state) {
+        UpdateState.Loading -> CircularProgressIndicator(modifier = Modifier.testTag("update_loading"))
+        UpdateState.UpToDate -> Text(
+            text = "Up to date",
+            modifier = Modifier.testTag("update_up_to_date"),
+        )
+        is UpdateState.UpdateAvailable -> Column {
+            Text(
+                text = "Installed: build-${com.hopescrolling.BuildConfig.VERSION_CODE}",
+                modifier = Modifier.testTag("update_installed_version"),
+            )
+            Text(
+                text = "Latest: ${state.latestLabel}",
+                modifier = Modifier.testTag("update_latest_version"),
+            )
+        }
+        UpdateState.Error -> Text(
+            text = "Could not check for updates",
+            modifier = Modifier.testTag("update_error"),
         )
     }
 }

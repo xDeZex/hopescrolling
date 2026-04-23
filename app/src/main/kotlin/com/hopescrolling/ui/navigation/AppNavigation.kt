@@ -101,7 +101,7 @@ fun AppNavigation() {
                 })
             }
             composable(ROUTE_SETTINGS) {
-                val viewModel = viewModel { SettingsViewModel(container.feedSourceRepository) }
+                val viewModel = viewModel { SettingsViewModel(container.feedSourceRepository, container.appUpdateRepository) }
                 SettingsScreen(viewModel)
             }
             composable(ROUTE_READER) { backStackEntry ->

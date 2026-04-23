@@ -12,8 +12,11 @@ import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.text.AnnotatedString
 import com.hopescrolling.data.feed.FeedSource
+import com.hopescrolling.data.update.UpdateState
+import com.hopescrolling.util.FakeAppUpdateRepository
 import com.hopescrolling.util.FakeFeedSourceRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
@@ -44,7 +47,7 @@ class SettingsScreenTest {
             FeedSource(id = "1", name = "Tech Blog", url = "https://tech.example.com/feed"),
             FeedSource(id = "2", name = "News Feed", url = "https://news.example.com/feed"),
         )
-        val viewModel = SettingsViewModel(repo)
+        val viewModel = SettingsViewModel(repo, FakeAppUpdateRepository())
         composeTestRule.setContent { SettingsScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithText("Tech Blog").assertIsDisplayed()
@@ -53,7 +56,7 @@ class SettingsScreenTest {
 
     @Test
     fun settingsScreen_hasAddInputAndButton() {
-        val viewModel = SettingsViewModel(FakeFeedSourceRepository())
+        val viewModel = SettingsViewModel(FakeFeedSourceRepository(), FakeAppUpdateRepository())
         composeTestRule.setContent { SettingsScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithTag("add_feed_input").assertIsDisplayed()
@@ -63,7 +66,7 @@ class SettingsScreenTest {
     @Test
     fun settingsScreen_addingUrlAppearsInList() {
         val repo = FakeFeedSourceRepository()
-        val viewModel = SettingsViewModel(repo)
+        val viewModel = SettingsViewModel(repo, FakeAppUpdateRepository())
         composeTestRule.setContent { SettingsScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithTag("add_feed_input").performTextInput("https://example.com/rss")
@@ -78,7 +81,7 @@ class SettingsScreenTest {
         repo.sources.value = listOf(
             FeedSource(id = "1", name = "Tech Blog", url = "https://tech.example.com/feed"),
         )
-        val viewModel = SettingsViewModel(repo)
+        val viewModel = SettingsViewModel(repo, FakeAppUpdateRepository())
         composeTestRule.setContent { SettingsScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithTag("delete_feed_1").performClick()
@@ -92,7 +95,7 @@ class SettingsScreenTest {
         repo.sources.value = listOf(
             FeedSource(id = "1", name = "Old Name", url = "https://example.com/feed"),
         )
-        val viewModel = SettingsViewModel(repo)
+        val viewModel = SettingsViewModel(repo, FakeAppUpdateRepository())
         composeTestRule.setContent { SettingsScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithTag("rename_feed_1").performClick()
@@ -102,5 +105,41 @@ class SettingsScreenTest {
         composeTestRule.onNodeWithTag("rename_dialog_confirm").performClick()
 
         composeTestRule.onNodeWithText("New Name").assertIsDisplayed()
+    }
+
+    @Test
+    fun settingsScreen_showsLoadingIndicatorDuringUpdateCheck() {
+        val testDispatcher = StandardTestDispatcher()
+        Dispatchers.setMain(testDispatcher)
+        val viewModel = SettingsViewModel(FakeFeedSourceRepository(), FakeAppUpdateRepository())
+        composeTestRule.setContent { SettingsScreen(viewModel = viewModel) }
+
+        composeTestRule.onNodeWithTag("update_loading").assertIsDisplayed()
+    }
+
+    @Test
+    fun settingsScreen_showsUpToDateWhenNoUpdateAvailable() {
+        val viewModel = SettingsViewModel(FakeFeedSourceRepository(), FakeAppUpdateRepository(UpdateState.UpToDate))
+        composeTestRule.setContent { SettingsScreen(viewModel = viewModel) }
+
+        composeTestRule.onNodeWithTag("update_up_to_date").assertIsDisplayed()
+    }
+
+    @Test
+    fun settingsScreen_showsVersionLabelsWhenUpdateAvailable() {
+        val state = UpdateState.UpdateAvailable(latestLabel = "Build 42", apkUrl = "https://example.com/app.apk")
+        val viewModel = SettingsViewModel(FakeFeedSourceRepository(), FakeAppUpdateRepository(state))
+        composeTestRule.setContent { SettingsScreen(viewModel = viewModel) }
+
+        composeTestRule.onNodeWithTag("update_installed_version").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("update_latest_version").assertIsDisplayed()
+    }
+
+    @Test
+    fun settingsScreen_showsErrorMessageOnUpdateCheckFailure() {
+        val viewModel = SettingsViewModel(FakeFeedSourceRepository(), FakeAppUpdateRepository(UpdateState.Error))
+        composeTestRule.setContent { SettingsScreen(viewModel = viewModel) }
+
+        composeTestRule.onNodeWithTag("update_error").assertIsDisplayed()
     }
 }

@@ -4,17 +4,31 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hopescrolling.data.feed.FeedSource
 import com.hopescrolling.data.feed.FeedSourceRepository
+import com.hopescrolling.data.update.AppUpdateRepository
+import com.hopescrolling.data.update.UpdateState
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.UUID
 
 class SettingsViewModel(
     private val repository: FeedSourceRepository,
+    private val appUpdateRepository: AppUpdateRepository,
 ) : ViewModel() {
     val feedSources: StateFlow<List<FeedSource>> = repository.getAll()
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    private val _updateState = MutableStateFlow<UpdateState>(UpdateState.Loading)
+    val updateState: StateFlow<UpdateState> = _updateState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            _updateState.value = appUpdateRepository.getUpdateState()
+        }
+    }
 
     fun addFeed(url: String) {
         viewModelScope.launch {

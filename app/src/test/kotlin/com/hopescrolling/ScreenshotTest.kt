@@ -32,6 +32,7 @@ import com.hopescrolling.ui.screens.TimelineViewModel
 import com.hopescrolling.ui.theme.HopescrollingTheme
 import com.hopescrolling.util.FakeArticleContentFetcher
 import com.hopescrolling.util.FakeArticleRepository
+import com.hopescrolling.util.FakeAppUpdateRepository
 import com.hopescrolling.util.FakeFeedSourceRepository
 import com.hopescrolling.util.FakeReadStateRepository
 import kotlinx.coroutines.Dispatchers
@@ -301,7 +302,7 @@ class ScreenshotTest {
 
     @Test
     fun screenshot_settingsScreen_empty() {
-        val viewModel = SettingsViewModel(FakeFeedSourceRepository())
+        val viewModel = SettingsViewModel(FakeFeedSourceRepository(), FakeAppUpdateRepository())
         setSettingsContent(viewModel)
         saveScreenshot("settings_screen_empty")
         assertTrue(File(screenshotsDir, "settings_screen_empty.png").exists())
@@ -314,7 +315,7 @@ class ScreenshotTest {
             FeedSource(id = "1", name = "Tech Blog", url = "https://tech.example.com/feed"),
             FeedSource(id = "2", name = "News Feed", url = "https://news.example.com/feed"),
         )
-        val viewModel = SettingsViewModel(repo)
+        val viewModel = SettingsViewModel(repo, FakeAppUpdateRepository())
         setSettingsContent(viewModel)
         saveScreenshot("settings_screen_with_feeds")
         assertTrue(File(screenshotsDir, "settings_screen_with_feeds.png").exists())
