@@ -69,8 +69,10 @@ class ArticleReaderScreenTest {
 
         val content = ArticleContent(
             title = "Article",
-            items = listOf(ContentItem.Paragraph("Para")),
-            links = listOf(com.hopescrolling.data.article.ArticleLink("A link", "https://example.com/ref")),
+            items = listOf(
+                ContentItem.Paragraph("Para"),
+                ContentItem.Link("A link", "https://example.com/ref"),
+            ),
         )
         val viewModel = ArticleReaderViewModel(FakeArticleContentFetcher(Result.success(content)), "https://example.com")
         composeTestRule.setContent { ArticleReaderScreen(viewModel = viewModel) }
@@ -84,10 +86,10 @@ class ArticleReaderScreenTest {
     fun readerScreen_showsLinksAsClickable() {
         val content = ArticleContent(
             title = "Article with links",
-            items = listOf(ContentItem.Paragraph("Para")),
-            links = listOf(
-                com.hopescrolling.data.article.ArticleLink("Reference 1", "https://example.com/ref1"),
-                com.hopescrolling.data.article.ArticleLink("Reference 2", "https://example.com/ref2"),
+            items = listOf(
+                ContentItem.Paragraph("Para"),
+                ContentItem.Link("Reference 1", "https://example.com/ref1"),
+                ContentItem.Link("Reference 2", "https://example.com/ref2"),
             ),
         )
         val viewModel = ArticleReaderViewModel(FakeArticleContentFetcher(Result.success(content)), "https://example.com")
@@ -133,6 +135,25 @@ class ArticleReaderScreenTest {
         composeTestRule.setContent { ArticleReaderScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithTag("reader_loading").assertIsDisplayed()
+    }
+
+    @Test
+    fun readerScreen_rendersLinksInDocumentOrder() {
+        val content = ArticleContent(
+            title = "Mixed",
+            items = listOf(
+                ContentItem.Paragraph("First para"),
+                ContentItem.Link("A Link", "https://example.com/link1"),
+                ContentItem.Paragraph("Second para"),
+            ),
+        )
+        val viewModel = ArticleReaderViewModel(FakeArticleContentFetcher(Result.success(content)), "https://example.com")
+        composeTestRule.setContent { ArticleReaderScreen(viewModel = viewModel) }
+
+        composeTestRule.onNodeWithTag("reader_paragraph_0").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("reader_link_0").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("reader_link_0").assertHasClickAction()
+        composeTestRule.onNodeWithTag("reader_paragraph_1").assertIsDisplayed()
     }
 
     @Test

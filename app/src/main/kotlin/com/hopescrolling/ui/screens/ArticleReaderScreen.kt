@@ -65,6 +65,7 @@ fun ArticleReaderScreen(viewModel: ArticleReaderViewModel) {
                 // Local vars reset to 0 each composition pass — safe, not captured across recompositions.
                 var imageCount = 0
                 var paraCount = 0
+                var linkCount = 0
                 state.content.items.forEach { item ->
                     when (item) {
                         is ContentItem.Image -> AsyncImage(
@@ -83,20 +84,18 @@ fun ArticleReaderScreen(viewModel: ArticleReaderViewModel) {
                             color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.testTag("reader_paragraph_${paraCount++}"),
                         )
-                    }
-                }
-                state.content.links.forEachIndexed { index, link ->
-                    TextButton(
-                        onClick = { openInBrowser(context, link.url) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("reader_link_$index"),
-                    ) {
-                        Text(
-                            text = link.text,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
+                        is ContentItem.Link -> TextButton(
+                            onClick = { openInBrowser(context, item.url) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("reader_link_${linkCount++}"),
+                        ) {
+                            Text(
+                                text = item.text,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
                     }
                 }
             }

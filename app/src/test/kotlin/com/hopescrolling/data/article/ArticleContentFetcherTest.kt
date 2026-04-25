@@ -134,7 +134,14 @@ class ArticleContentFetcherTest {
         val content = jsoupArticleContentFetcher().fetch(server.url("/").toString()).getOrThrow()
 
         // Inline links (inside <p>) are excluded to avoid duplicating paragraph text
-        assertEquals(listOf("Standalone Link 1" to "https://example.com/standalone1", "Standalone Link 2" to "https://example.com/standalone2"), content.links.map { it.text to it.url })
+        assertEquals(
+            listOf(
+                ContentItem.Paragraph("See inline link in this paragraph."),
+                ContentItem.Link("Standalone Link 1", "https://example.com/standalone1"),
+                ContentItem.Link("Standalone Link 2", "https://example.com/standalone2"),
+            ),
+            content.items,
+        )
     }
 
     @Test
@@ -177,6 +184,52 @@ class ArticleContentFetcherTest {
         val content = result.getOrThrow()
         assertEquals("My Article", content.title)
         assertEquals(listOf(ContentItem.Paragraph("First para"), ContentItem.Paragraph("Second para")), content.items)
+    }
+
+    @Test
+    fun `preserves document order of paragraphs images and links`() = runTest {
+        val html = """
+            <html><body><article>
+                <p>First para</p>
+                <a href="https://example.com/link1">A Link</a>
+                <p>Second para</p>
+            </article></body></html>
+        """.trimIndent()
+        server.enqueue(MockResponse().setBody(html).setResponseCode(200))
+
+        val content = jsoupArticleContentFetcher().fetch(server.url("/").toString()).getOrThrow()
+
+        assertEquals(
+            listOf(
+                ContentItem.Paragraph("First para"),
+                ContentItem.Link("A Link", "https://example.com/link1"),
+                ContentItem.Paragraph("Second para"),
+            ),
+            content.items,
+        )
+    }
+
+    @Test
+    fun `does not emit link for image-wrapping anchor`() = runTest {
+        val html = """
+            <html><body><article>
+                <p>Before</p>
+                <a href="https://example.com/photo"><img src="https://example.com/photo.jpg"/></a>
+                <p>After</p>
+            </article></body></html>
+        """.trimIndent()
+        server.enqueue(MockResponse().setBody(html).setResponseCode(200))
+
+        val content = jsoupArticleContentFetcher().fetch(server.url("/").toString()).getOrThrow()
+
+        assertEquals(
+            listOf(
+                ContentItem.Paragraph("Before"),
+                ContentItem.Image("https://example.com/photo.jpg"),
+                ContentItem.Paragraph("After"),
+            ),
+            content.items,
+        )
     }
 
     @Test
