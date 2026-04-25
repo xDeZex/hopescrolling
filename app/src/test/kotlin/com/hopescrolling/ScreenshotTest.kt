@@ -291,6 +291,52 @@ class ScreenshotTest {
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Test
+    fun screenshot_articleReaderScreen_contentOrder() {
+        val content = ArticleContent(
+            title = "Document Order: Paragraphs, Links, and Images",
+            items = listOf(
+                ContentItem.Paragraph("This paragraph appears first. It introduces the topic before the link below."),
+                ContentItem.Link("Read the full specification", "https://example.com/spec"),
+                ContentItem.Paragraph("This paragraph appears after the link but before the image."),
+                ContentItem.Image("https://example.com/diagram.png"),
+                ContentItem.Paragraph("This paragraph appears after the image, at the end of the article."),
+            ),
+        )
+        val viewModel = ArticleReaderViewModel(
+            FakeArticleContentFetcher(Result.success(content)),
+            "https://example.com/article",
+        )
+        composeTestRule.setContent {
+            HopescrollingTheme {
+                Scaffold(
+                    topBar = {
+                        TopAppBar(
+                            title = {},
+                            navigationIcon = {
+                                IconButton(onClick = {}) {
+                                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                                }
+                            },
+                            actions = {
+                                IconButton(onClick = {}) {
+                                    Icon(Icons.Default.Share, contentDescription = "Open in browser")
+                                }
+                            },
+                        )
+                    },
+                ) { padding ->
+                    Box(modifier = Modifier.padding(padding)) {
+                        ArticleReaderScreen(viewModel = viewModel)
+                    }
+                }
+            }
+        }
+        saveScreenshot("article_reader_content_order")
+        assertTrue(File(screenshotsDir, "article_reader_content_order.png").exists())
+    }
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Test
     fun screenshot_articleReaderScreen_error() {
         val viewModel = ArticleReaderViewModel(
             FakeArticleContentFetcher(Result.failure(RuntimeException("Failed to load article"))),

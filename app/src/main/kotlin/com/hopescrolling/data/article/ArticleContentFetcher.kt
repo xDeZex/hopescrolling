@@ -45,7 +45,7 @@ private class JsoupArticleContentFetcher(
         val title = doc.title()
         val contentEl = findContentElement(doc)
         val items = buildList {
-            for (el in contentEl.select("p, img[src]")) {
+            for (el in contentEl.select("p, img[src], a[href]")) {
                 when (el.tagName()) {
                     "p" -> {
                         val text = el.text()
@@ -55,19 +55,17 @@ private class JsoupArticleContentFetcher(
                         val src = el.absUrl("src")
                         if (src.isNotBlank()) add(ContentItem.Image(src))
                     }
+                    "a" -> {
+                        if (el.parents().none { it.tagName() == "p" } && el.select("img").isEmpty()) {
+                            val text = el.text().trim()
+                            val href = el.absUrl("href")
+                            if (text.isNotBlank() && href.isNotBlank()) add(ContentItem.Link(text, href))
+                        }
+                    }
                 }
             }
         }
-        // Only extract links NOT inside <p> elements — paragraph text already contains their
-        // visible text, so including them here would duplicate content for the user.
-        val links = contentEl.select("a[href]")
-            .filter { el -> el.parents().none { it.tagName() == "p" } }
-            .mapNotNull { el ->
-                val text = el.text().trim()
-                val href = el.absUrl("href")
-                if (text.isNotBlank() && href.isNotBlank()) ArticleLink(text, href) else null
-            }
-        return ArticleContent(title = title, items = items, links = links)
+        return ArticleContent(title = title, items = items)
     }
 
     private fun findContentElement(doc: Document): Element =
