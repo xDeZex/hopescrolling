@@ -1,5 +1,6 @@
 package com.hopescrolling.data.article
 
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -9,6 +10,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
+@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class ArticleContentFetcherTest {
     private lateinit var server: MockWebServer
 
@@ -21,6 +23,13 @@ class ArticleContentFetcherTest {
     @After
     fun tearDown() {
         server.shutdown()
+    }
+
+    @Test
+    fun `accepts injected dispatcher`() = runTest {
+        server.enqueue(MockResponse().setBody("<html><body><article><p>Hello</p></article></body></html>").setResponseCode(200))
+        val result = jsoupArticleContentFetcher(UnconfinedTestDispatcher(testScheduler)).fetch(server.url("/").toString())
+        assertTrue(result.isSuccess)
     }
 
     @Test

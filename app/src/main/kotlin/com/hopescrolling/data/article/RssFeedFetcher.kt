@@ -1,5 +1,6 @@
 package com.hopescrolling.data.article
 
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.IOException
@@ -10,8 +11,8 @@ fun interface RssFeedFetcher {
     suspend fun fetch(url: String): String
 }
 
-fun httpRssFeedFetcher(): RssFeedFetcher = RssFeedFetcher { url ->
-    withContext(Dispatchers.IO) {
+fun httpRssFeedFetcher(dispatcher: CoroutineDispatcher = Dispatchers.IO): RssFeedFetcher = RssFeedFetcher { url ->
+    withContext(dispatcher) {
         fetchFollowingRedirects(url, remainingRedirects = 5)
     }
 }

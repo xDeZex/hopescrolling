@@ -1,5 +1,6 @@
 package com.hopescrolling.data.article
 
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
@@ -13,10 +14,13 @@ interface ArticleContentFetcher {
     suspend fun fetch(url: String): Result<ArticleContent>
 }
 
-fun jsoupArticleContentFetcher(): ArticleContentFetcher = JsoupArticleContentFetcher()
+fun jsoupArticleContentFetcher(dispatcher: CoroutineDispatcher = Dispatchers.IO): ArticleContentFetcher =
+    JsoupArticleContentFetcher(dispatcher)
 
-private class JsoupArticleContentFetcher : ArticleContentFetcher {
-    override suspend fun fetch(url: String): Result<ArticleContent> = withContext(Dispatchers.IO) {
+private class JsoupArticleContentFetcher(
+    private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
+) : ArticleContentFetcher {
+    override suspend fun fetch(url: String): Result<ArticleContent> = withContext(dispatcher) {
         runCatching {
             val html = fetchHtml(url)
             parseContent(html, url)
