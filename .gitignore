@@ -7,8 +7,9 @@ app/build/
 local.properties
 *.iml
 
-# Claude Code
-.claude/
+# Claude Code (local-only files; commands/skills are committed)
+.claude/worktrees/
+.claude/settings.local.json
 
 # IDE
 .idea/
