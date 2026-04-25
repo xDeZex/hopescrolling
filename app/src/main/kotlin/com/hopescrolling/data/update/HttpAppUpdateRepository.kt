@@ -1,5 +1,6 @@
 package com.hopescrolling.data.update
 
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -9,9 +10,10 @@ import java.net.URL
 class HttpAppUpdateRepository(
     private val apiUrl: String,
     private val currentVersionCode: Int,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : AppUpdateRepository {
 
-    override suspend fun getUpdateState(): UpdateState = withContext(Dispatchers.IO) {
+    override suspend fun getUpdateState(): UpdateState = withContext(dispatcher) {
         try {
             val json = fetch(apiUrl)
             val releases = JSONArray(json)

@@ -1,6 +1,7 @@
 package com.hopescrolling.data.article
 
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -10,6 +11,7 @@ import org.junit.Before
 import org.junit.Test
 import java.io.IOException
 
+@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class RssFeedFetcherTest {
     private lateinit var server: MockWebServer
 
@@ -22,6 +24,13 @@ class RssFeedFetcherTest {
     @After
     fun tearDown() {
         server.shutdown()
+    }
+
+    @Test
+    fun `accepts injected dispatcher`() = runTest {
+        server.enqueue(MockResponse().setBody("<rss/>").setResponseCode(200))
+        val fetcher = httpRssFeedFetcher(UnconfinedTestDispatcher(testScheduler))
+        assertEquals("<rss/>", fetcher.fetch(server.url("/feed").toString()))
     }
 
     @Test
