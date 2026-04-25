@@ -13,6 +13,7 @@ import coil.Coil
 import coil.ImageLoader
 import coil.test.FakeImageLoaderEngine
 import com.hopescrolling.data.article.ArticleContent
+import com.hopescrolling.data.article.ContentItem
 import com.hopescrolling.util.FakeArticleContentFetcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -68,7 +69,7 @@ class ArticleReaderScreenTest {
 
         val content = ArticleContent(
             title = "Article",
-            paragraphs = listOf("Para"),
+            items = listOf(ContentItem.Paragraph("Para")),
             links = listOf(com.hopescrolling.data.article.ArticleLink("A link", "https://example.com/ref")),
         )
         val viewModel = ArticleReaderViewModel(FakeArticleContentFetcher(Result.success(content)), "https://example.com")
@@ -83,7 +84,7 @@ class ArticleReaderScreenTest {
     fun readerScreen_showsLinksAsClickable() {
         val content = ArticleContent(
             title = "Article with links",
-            paragraphs = listOf("Para"),
+            items = listOf(ContentItem.Paragraph("Para")),
             links = listOf(
                 com.hopescrolling.data.article.ArticleLink("Reference 1", "https://example.com/ref1"),
                 com.hopescrolling.data.article.ArticleLink("Reference 2", "https://example.com/ref2"),
@@ -101,8 +102,11 @@ class ArticleReaderScreenTest {
     fun readerScreen_showsImagesOnSuccess() {
         val content = ArticleContent(
             title = "Article with images",
-            paragraphs = listOf("Para"),
-            imageUrls = listOf("https://example.com/photo.jpg", "https://example.com/chart.png"),
+            items = listOf(
+                ContentItem.Paragraph("Para"),
+                ContentItem.Image("https://example.com/photo.jpg"),
+                ContentItem.Image("https://example.com/chart.png"),
+            ),
         )
         val viewModel = ArticleReaderViewModel(FakeArticleContentFetcher(Result.success(content)), "https://example.com")
         composeTestRule.setContent { ArticleReaderScreen(viewModel = viewModel) }
@@ -113,7 +117,7 @@ class ArticleReaderScreenTest {
 
     @Test
     fun readerScreen_showsTitleAndParagraphsOnSuccess() {
-        val content = ArticleContent(title = "Great Article", paragraphs = listOf("First paragraph.", "Second paragraph."))
+        val content = ArticleContent(title = "Great Article", items = listOf(ContentItem.Paragraph("First paragraph."), ContentItem.Paragraph("Second paragraph.")))
         val viewModel = ArticleReaderViewModel(FakeArticleContentFetcher(Result.success(content)), "https://example.com")
         composeTestRule.setContent { ArticleReaderScreen(viewModel = viewModel) }
 
@@ -129,5 +133,23 @@ class ArticleReaderScreenTest {
         composeTestRule.setContent { ArticleReaderScreen(viewModel = viewModel) }
 
         composeTestRule.onNodeWithTag("reader_loading").assertIsDisplayed()
+    }
+
+    @Test
+    fun readerScreen_rendersImagesInDocumentOrder() {
+        val content = ArticleContent(
+            title = "Mixed",
+            items = listOf(
+                ContentItem.Paragraph("First para"),
+                ContentItem.Image("https://example.com/photo.jpg"),
+                ContentItem.Paragraph("Second para"),
+            ),
+        )
+        val viewModel = ArticleReaderViewModel(FakeArticleContentFetcher(Result.success(content)), "https://example.com")
+        composeTestRule.setContent { ArticleReaderScreen(viewModel = viewModel) }
+
+        composeTestRule.onNodeWithTag("reader_paragraph_0").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("reader_image_0").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("reader_paragraph_1").assertIsDisplayed()
     }
 }

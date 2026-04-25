@@ -28,6 +28,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.hopescrolling.data.article.ContentItem
 import com.hopescrolling.ui.theme.Spacing
 
 @Composable
@@ -61,25 +62,28 @@ fun ArticleReaderScreen(viewModel: ArticleReaderViewModel) {
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.testTag("reader_title"),
                 )
-                state.content.imageUrls.forEachIndexed { index, imageUrl ->
-                    // heightIn(min=1.dp) prevents AsyncImage from collapsing to zero size
-                    // before the image loads, which would make the node fail assertIsDisplayed()
-                    AsyncImage(
-                        model = imageUrl,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 1.dp)
-                            .testTag("reader_image_$index"),
-                    )
-                }
-                state.content.paragraphs.forEachIndexed { index, paragraph ->
-                    Text(
-                        text = paragraph,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.testTag("reader_paragraph_$index"),
-                    )
+                // Local vars reset to 0 each composition pass — safe, not captured across recompositions.
+                var imageCount = 0
+                var paraCount = 0
+                state.content.items.forEach { item ->
+                    when (item) {
+                        is ContentItem.Image -> AsyncImage(
+                            model = item.url,
+                            contentDescription = null,
+                            // heightIn(min=1.dp) prevents AsyncImage from collapsing to zero size
+                            // before the image loads, which would make the node fail assertIsDisplayed()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 1.dp)
+                                .testTag("reader_image_${imageCount++}"),
+                        )
+                        is ContentItem.Paragraph -> Text(
+                            text = item.text,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.testTag("reader_paragraph_${paraCount++}"),
+                        )
+                    }
                 }
                 state.content.links.forEachIndexed { index, link ->
                     TextButton(

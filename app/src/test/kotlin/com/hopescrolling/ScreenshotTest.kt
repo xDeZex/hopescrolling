@@ -2,7 +2,13 @@ package com.hopescrolling
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.drawable.BitmapDrawable
 import androidx.activity.ComponentActivity
+import androidx.test.core.app.ApplicationProvider
+import coil.Coil
+import coil.ImageLoader
+import coil.test.FakeImageLoaderEngine
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -19,6 +25,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performScrollToIndex
 import com.hopescrolling.data.article.ArticleContent
+import com.hopescrolling.data.article.ContentItem
 import com.hopescrolling.data.article.httpRssFeedFetcher
 import com.hopescrolling.data.feed.FeedSource
 import com.hopescrolling.data.rss.DefaultRssParser
@@ -75,10 +82,22 @@ class ScreenshotTest {
     val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
     @Before
-    fun setUp() = Dispatchers.setMain(UnconfinedTestDispatcher())
+    fun setUp() {
+        Dispatchers.setMain(UnconfinedTestDispatcher())
+        val context = ApplicationProvider.getApplicationContext<android.app.Application>()
+        val placeholder = Bitmap.createBitmap(720, 300, Bitmap.Config.ARGB_8888)
+            .also { Canvas(it).drawColor(Color.DKGRAY) }
+        val engine = FakeImageLoaderEngine.Builder()
+            .default(BitmapDrawable(context.resources, placeholder))
+            .build()
+        Coil.setImageLoader(ImageLoader.Builder(context).components { add(engine) }.build())
+    }
 
     @After
-    fun tearDown() = Dispatchers.resetMain()
+    fun tearDown() {
+        Dispatchers.resetMain()
+        Coil.reset()
+    }
 
     private fun saveScreenshot(name: String) {
         composeTestRule.waitForIdle()
@@ -230,10 +249,11 @@ class ScreenshotTest {
     fun screenshot_articleReaderScreen_success() {
         val content = ArticleContent(
             title = "Kotlin 2.2 Brings Improved Type Inference",
-            paragraphs = listOf(
-                "The latest Kotlin release ships smarter type inference and faster incremental compilation, making large codebases feel snappier during development.",
-                "Among the most anticipated improvements is context-sensitive overload resolution, which reduces the need for explicit type annotations in common patterns.",
-                "The Kotlin team has also invested in tooling: IDE plugins now surface type-inference hints inline, helping developers understand why a particular overload was chosen.",
+            items = listOf(
+                ContentItem.Paragraph("The latest Kotlin release ships smarter type inference and faster incremental compilation, making large codebases feel snappier during development."),
+                ContentItem.Image("https://example.com/kotlin-inference.png"),
+                ContentItem.Paragraph("Among the most anticipated improvements is context-sensitive overload resolution, which reduces the need for explicit type annotations in common patterns."),
+                ContentItem.Paragraph("The Kotlin team has also invested in tooling: IDE plugins now surface type-inference hints inline, helping developers understand why a particular overload was chosen."),
             ),
         )
         val viewModel = ArticleReaderViewModel(
