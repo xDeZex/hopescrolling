@@ -9,6 +9,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import com.hopescrolling.data.article.ContentItem
 
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class ArticleContentFetcherTest {
@@ -65,7 +66,7 @@ class ArticleContentFetcherTest {
         val result = jsoupArticleContentFetcher().fetch(server.url("/").toString())
 
         val content = result.getOrThrow()
-        assertTrue(content.paragraphs.contains(longText))
+        assertTrue(content.items.filterIsInstance<ContentItem.Paragraph>().any { it.text == longText })
     }
 
     @Test
@@ -82,7 +83,7 @@ class ArticleContentFetcherTest {
         val result = jsoupArticleContentFetcher().fetch(server.url("/").toString())
 
         val content = result.getOrThrow()
-        assertEquals(listOf("Main content"), content.paragraphs)
+        assertEquals(listOf(ContentItem.Paragraph("Main content")), content.items)
     }
 
     @Test
@@ -99,7 +100,7 @@ class ArticleContentFetcherTest {
         val result = jsoupArticleContentFetcher().fetch(server.url("/").toString())
 
         val content = result.getOrThrow()
-        assertEquals(listOf("Main role content"), content.paragraphs)
+        assertEquals(listOf(ContentItem.Paragraph("Main role content")), content.items)
     }
 
     @Test
@@ -115,7 +116,7 @@ class ArticleContentFetcherTest {
         val result = jsoupArticleContentFetcher().fetch(server.url("/").toString())
 
         val content = result.getOrThrow()
-        assertEquals(listOf("Article content"), content.paragraphs)
+        assertEquals(listOf(ContentItem.Paragraph("Article content")), content.items)
     }
 
     @Test
@@ -151,7 +152,15 @@ class ArticleContentFetcherTest {
 
         val content = jsoupArticleContentFetcher().fetch(server.url("/").toString()).getOrThrow()
 
-        assertEquals(listOf("https://example.com/photo.jpg", "https://example.com/chart.png"), content.imageUrls)
+        assertEquals(
+            listOf(
+                ContentItem.Paragraph("First para"),
+                ContentItem.Image("https://example.com/photo.jpg"),
+                ContentItem.Paragraph("Second para"),
+                ContentItem.Image("https://example.com/chart.png"),
+            ),
+            content.items,
+        )
     }
 
     @Test
@@ -167,6 +176,29 @@ class ArticleContentFetcherTest {
         assertTrue(result.isSuccess)
         val content = result.getOrThrow()
         assertEquals("My Article", content.title)
-        assertEquals(listOf("First para", "Second para"), content.paragraphs)
+        assertEquals(listOf(ContentItem.Paragraph("First para"), ContentItem.Paragraph("Second para")), content.items)
+    }
+
+    @Test
+    fun `preserves document order of paragraphs and images`() = runTest {
+        val html = """
+            <html><body><article>
+                <p>First para</p>
+                <img src="https://example.com/photo.jpg"/>
+                <p>Second para</p>
+            </article></body></html>
+        """.trimIndent()
+        server.enqueue(MockResponse().setBody(html).setResponseCode(200))
+
+        val content = jsoupArticleContentFetcher().fetch(server.url("/").toString()).getOrThrow()
+
+        assertEquals(
+            listOf(
+                ContentItem.Paragraph("First para"),
+                ContentItem.Image("https://example.com/photo.jpg"),
+                ContentItem.Paragraph("Second para"),
+            ),
+            content.items,
+        )
     }
 }

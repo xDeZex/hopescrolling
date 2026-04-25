@@ -1,6 +1,7 @@
 package com.hopescrolling.ui.screens
 
 import com.hopescrolling.data.article.ArticleContent
+import com.hopescrolling.data.article.ContentItem
 import com.hopescrolling.util.FakeArticleContentFetcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -37,7 +38,7 @@ class ArticleReaderViewModelTest {
 
     @Test
     fun `uiState emits Success with content after successful fetch`() = runTest {
-        val content = ArticleContent(title = "My Title", paragraphs = listOf("Para 1", "Para 2"))
+        val content = ArticleContent(title = "My Title", items = listOf(ContentItem.Paragraph("Para 1"), ContentItem.Paragraph("Para 2")))
         val viewModel = ArticleReaderViewModel(
             FakeArticleContentFetcher(Result.success(content)),
             "https://example.com/article",
