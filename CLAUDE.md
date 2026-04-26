@@ -16,6 +16,20 @@ After every commit, launch a subagent to review it (`git show HEAD`) and report 
 
 Every finding raised by the reviewer must be either fixed (in the current commit via amend) or tracked as a GitHub issue. Do not silently ignore reviewer findings. If the finding was introduced by this commit, fix it directly via amend. If it is pre-existing, fix it now only if the change is small and safe — otherwise file an issue for later.
 
+## TDD
+
+Always implement with strict TDD — one behavior at a time, test before code:
+
+1. Write one failing test for the next behavior (RED) — run it and confirm it fails
+2. Write the minimal code to make it pass (GREEN)
+3. Repeat for the next behavior
+
+Never write all tests first then all implementation (horizontal slicing). Each test must respond to what you learned from the previous cycle.
+
+Tests verify behavior through public interfaces only — not implementation details, not private methods. A test that breaks when you rename an internal function is testing the wrong thing.
+
+When working with OpenSpec, use the `spec-driven-custom` schema (not `spec-driven`) so tasks are generated with [RED]/[GREEN] pairs already structured correctly.
+
 ## Commands
 
 `gradlew` is patched to fall back to Android Studio's JDK when `JAVA_HOME` is not set — no `JAVA_HOME` export needed locally. `org.gradle.java.home` is intentionally absent from `gradle.properties` so CI can use its own JDK.
