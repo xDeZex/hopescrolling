@@ -210,11 +210,13 @@ class TimelineScreenTest {
         val articles = listOf(
             Article(title = "Post", link = "https://a.com/1", description = null, pubDate = null, feedSourceId = "f1"),
         )
-        val repo = FakeArticleRepository(articles = articles)
+        // hangAfterCalls=1: init fetch completes, subsequent refresh hangs so loading state persists
+        val repo = FakeArticleRepository(articles = articles, hangAfterCalls = 1)
         val viewModel = TimelineViewModel(repo, FakeReadStateRepository())
         dispatcher.scheduler.advanceUntilIdle() // complete initial load so articles are present
 
         viewModel.refresh() // isLoading=true while articles are already in state
+        dispatcher.scheduler.runCurrent() // run combine() reaction; refresh fetch suspends
 
         composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
         // uiState.isLoading == true confirms PullToRefreshBox receives isRefreshing=true (the wiring)
@@ -230,11 +232,13 @@ class TimelineScreenTest {
         val articles = listOf(
             Article(title = "Existing Post", link = "https://a.com/1", description = null, pubDate = null, feedSourceId = "f1"),
         )
-        val repo = FakeArticleRepository(articles = articles)
+        // hangAfterCalls=1: init fetch completes, subsequent refresh hangs so loading state persists
+        val repo = FakeArticleRepository(articles = articles, hangAfterCalls = 1)
         val viewModel = TimelineViewModel(repo, FakeReadStateRepository())
         dispatcher.scheduler.advanceUntilIdle() // complete initial load
 
         viewModel.refresh() // isLoading=true but articles already present
+        dispatcher.scheduler.runCurrent() // run combine() reaction; refresh fetch suspends
 
         composeTestRule.setContent { TimelineScreen(viewModel = viewModel) }
         composeTestRule.onNodeWithText("Existing Post").assertIsDisplayed()

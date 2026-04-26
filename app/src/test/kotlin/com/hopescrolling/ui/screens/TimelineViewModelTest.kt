@@ -75,11 +75,13 @@ class TimelineViewModelTest {
         val testDispatcher = StandardTestDispatcher(testScheduler)
         Dispatchers.setMain(testDispatcher)
         try {
-            val repo = FakeArticleRepository()
+            // hangAfterCalls=1: init fetch completes, subsequent refresh hangs
+            val repo = FakeArticleRepository(hangAfterCalls = 1)
             val viewModel = TimelineViewModel(repo, FakeReadStateRepository())
             testScheduler.advanceUntilIdle() // complete init fetch
 
             viewModel.refresh()
+            testScheduler.runCurrent() // run combine() reaction; refresh fetch suspends
 
             assertEquals(true, viewModel.uiState.value.isLoading)
             assertEquals(null, viewModel.uiState.value.error)
@@ -109,7 +111,7 @@ class TimelineViewModelTest {
     fun `uiState readIds is empty when no articles have been read`() = runTest {
         val viewModel = TimelineViewModel(FakeArticleRepository(), FakeReadStateRepository())
 
-        val state = viewModel.uiState.first()
+        val state = viewModel.uiState.first { !it.isLoading }
 
         assertEquals(emptySet<String>(), state.readIds)
     }
@@ -121,5 +123,92 @@ class TimelineViewModelTest {
         viewModel.markRead("https://a.com/1")
 
         assertEquals(setOf("https://a.com/1"), viewModel.uiState.value.readIds)
+    }
+
+    @Test
+    fun `uiState has error set and readIds unchanged when repository throws`() = runTest {
+        val readStateRepo = FakeReadStateRepository(initialReadIds = setOf("id1"))
+        val viewModel = TimelineViewModel(
+            FakeArticleRepository(error = RuntimeException("oops")),
+            readStateRepo,
+        )
+
+        val state = viewModel.uiState.first { !it.isLoading }
+
+        assertEquals("oops", state.error)
+        assertEquals(setOf("id1"), state.readIds)
+    }
+
+    @Test
+    fun `readIds updates while loading are reflected in uiState without skipping`() = runTest {
+        val readStateRepo = FakeReadStateRepository()
+        // hangAfterCalls=0: fetch always hangs so isLoading stays true
+        val viewModel = TimelineViewModel(FakeArticleRepository(hangAfterCalls = 0), readStateRepo)
+
+        // UnconfinedTestDispatcher + SharingStarted.Eagerly makes combine() propagate synchronously
+        readStateRepo.markRead("id1")
+        assertEquals(setOf("id1"), viewModel.uiState.value.readIds)
+        assertEquals(true, viewModel.uiState.value.isLoading)
+
+        readStateRepo.markRead("id2")
+        assertEquals(setOf("id1", "id2"), viewModel.uiState.value.readIds)
+        assertEquals(true, viewModel.uiState.value.isLoading)
+    }
+
+    @Test
+    fun `uiState readIds is preserved during refresh`() = runTest {
+        val testDispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+        try {
+            val readStateRepo = FakeReadStateRepository(initialReadIds = setOf("id1"))
+            // hangAfterCalls=1: init fetch completes, explicit refresh hangs
+            val viewModel = TimelineViewModel(FakeArticleRepository(hangAfterCalls = 1), readStateRepo)
+            testScheduler.advanceUntilIdle() // init fetch completes
+
+            viewModel.refresh()
+            testScheduler.runCurrent() // combine() reacts to isLoading=true; refresh fetch suspends
+
+            assertEquals(true, viewModel.uiState.value.isLoading)
+            assertEquals(setOf("id1"), viewModel.uiState.value.readIds)
+        } finally {
+            Dispatchers.setMain(UnconfinedTestDispatcher(testScheduler))
+        }
+    }
+
+    @Test
+    fun `refresh while fetching cancels previous fetch without setting an error`() = runTest {
+        val testDispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(testDispatcher)
+        try {
+            // hangAfterCalls=0: every fetch hangs, so refresh() always cancels the previous one
+            val viewModel = TimelineViewModel(FakeArticleRepository(hangAfterCalls = 0), FakeReadStateRepository())
+            testScheduler.runCurrent() // combine() emits initial state; fetch suspends
+
+            viewModel.refresh() // cancel hanging fetch; start a new hanging fetch
+            testScheduler.runCurrent() // deliver CancellationException to cancelled fetch; start new one
+
+            assertEquals(null, viewModel.uiState.value.error)
+            assertEquals(true, viewModel.uiState.value.isLoading)
+        } finally {
+            Dispatchers.setMain(UnconfinedTestDispatcher(testScheduler))
+        }
+    }
+
+    @Test
+    fun `successful refresh after error clears error state`() = runTest {
+        val articles = listOf(
+            Article(title = "Recovered", link = "https://a.com/1", description = null, pubDate = null, feedSourceId = "f1"),
+        )
+        val repo = FakeArticleRepository(articles = articles, error = RuntimeException("oops"))
+        val viewModel = TimelineViewModel(repo, FakeReadStateRepository())
+        viewModel.uiState.first { it.error != null } // wait for error state
+
+        // Fix the repo error and refresh
+        repo.clearError()
+        viewModel.refresh()
+        val state = viewModel.uiState.first { !it.isLoading }
+
+        assertEquals(null, state.error)
+        assertEquals(articles, state.articles)
     }
 }
